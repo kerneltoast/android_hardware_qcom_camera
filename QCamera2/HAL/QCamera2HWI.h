@@ -326,6 +326,7 @@ private:
     int commitParameterChanges();
 
     bool needDebugFps();
+    bool isRegularCapture();
     bool isCACEnabled();
     bool isPreviewRestartEnabled();
     bool is4k2kResolution(cam_dimension_t* resolution);
@@ -379,7 +380,7 @@ private:
     int32_t addCaptureChannel();
     int32_t addRawChannel();
     int32_t addMetaDataChannel();
-    QCameraReprocessChannel *addOnlineReprocChannel(QCameraChannel *pInputChannel);
+    QCameraReprocessChannel *addReprocChannel(QCameraChannel *pInputChannel);
     QCameraReprocessChannel *addOfflineReprocChannel(
                                                 cam_pp_offline_src_config_t &img_config,
                                                 cam_pp_feature_config_t &pp_feature,

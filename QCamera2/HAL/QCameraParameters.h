@@ -204,6 +204,8 @@ public:
     static const char KEY_QC_MIN_FOCUS_POS_DAC[];
     static const char KEY_QC_MAX_FOCUS_POS_DAC[];
 
+    static const char KEY_INTERNAL_PERVIEW_RESTART[];
+
     // DENOISE
     static const char KEY_QC_DENOISE[];
     static const char KEY_QC_SUPPORTED_DENOISE[];
