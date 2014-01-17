@@ -55,6 +55,8 @@ void mm_channel_release(mm_channel_t *my_obj);
 uint32_t mm_channel_add_stream(mm_channel_t *my_obj);
 int32_t mm_channel_del_stream(mm_channel_t *my_obj,
                                    uint32_t stream_id);
+uint32_t mm_channel_link_stream(mm_channel_t *my_obj,
+        mm_camera_stream_link_t *stream_link);
 int32_t mm_channel_config_stream(mm_channel_t *my_obj,
                                  uint32_t stream_id,
                                  mm_camera_stream_config_t *config);
@@ -69,7 +71,8 @@ int32_t mm_channel_flush_super_buf_queue(mm_channel_t *my_obj,
                                          uint32_t frame_idx);
 int32_t mm_channel_config_notify_mode(mm_channel_t *my_obj,
                                       mm_camera_super_buf_notify_mode_t notify_mode);
-int32_t mm_channel_superbuf_flush(mm_channel_t* my_obj, mm_channel_queue_t * queue);
+int32_t mm_channel_superbuf_flush(mm_channel_t* my_obj,
+        mm_channel_queue_t * queue, cam_stream_type_t cam_type);
 int32_t mm_channel_set_stream_parm(mm_channel_t *my_obj,
                                    mm_evt_paylod_set_get_stream_parms_t *payload);
 int32_t mm_channel_get_stream_parm(mm_channel_t *my_obj,
@@ -229,7 +232,8 @@ static void mm_channel_process_stream_buf(mm_camera_cmdcb_t * cmd_cb,
            ch_obj->bundle.superbuf_queue.attr.notify_mode = cmd_cb->u.notify_mode;
     } else if (MM_CAMERA_CMD_TYPE_FLUSH_QUEUE  == cmd_cb->cmd_type) {
         ch_obj->bundle.superbuf_queue.expected_frame_id = cmd_cb->u.frame_idx;
-        mm_channel_superbuf_flush(ch_obj, &ch_obj->bundle.superbuf_queue);
+        mm_channel_superbuf_flush(ch_obj,
+                &ch_obj->bundle.superbuf_queue, CAM_STREAM_TYPE_DEFAULT);
         return;
     } else if (MM_CAMERA_CMD_TYPE_GENERAL == cmd_cb->cmd_type) {
         CDBG_HIGH("%s:%d] MM_CAMERA_CMD_TYPE_GENERAL", __func__, __LINE__);
@@ -240,7 +244,7 @@ static void mm_channel_process_stream_buf(mm_camera_cmdcb_t * cmd_cb,
                 CDBG_HIGH("%s:%d] MM_CAMERA_GENERIC_CMDTYPE_AF_BRACKETING %d",
                     __func__, __LINE__, start);
                 mm_channel_superbuf_flush(ch_obj,
-                                         &ch_obj->bundle.superbuf_queue);
+                        &ch_obj->bundle.superbuf_queue, CAM_STREAM_TYPE_DEFAULT);
 
                 if (start) {
                     CDBG_HIGH("%s:%d] need AE bracketing, start zsl snapshot",
@@ -463,6 +467,16 @@ int32_t mm_channel_fsm_fn_stopped(mm_channel_t *my_obj,
         {
             uint32_t s_hdl = 0;
             s_hdl = mm_channel_add_stream(my_obj);
+            *((uint32_t*)out_val) = s_hdl;
+            rc = 0;
+        }
+        break;
+    case MM_CHANNEL_EVT_LINK_STREAM:
+        {
+            mm_camera_stream_link_t *stream_link = NULL;
+            uint32_t s_hdl = 0;
+            stream_link = (mm_camera_stream_link_t *) in_val;
+            s_hdl = mm_channel_link_stream(my_obj, stream_link);
             *((uint32_t*)out_val) = s_hdl;
             rc = 0;
         }
@@ -795,6 +809,60 @@ void mm_channel_release(mm_channel_t *my_obj)
 }
 
 /*===========================================================================
+ * FUNCTION   : mm_channel_link_stream
+ *
+ * DESCRIPTION: link a stream from external channel into this channel
+ *
+ * PARAMETERS :
+ *   @my_obj  : channel object
+ *   @stream_link  : channel and stream to be linked
+ *
+ * RETURN     : uint32_t type of stream handle
+ *              0  -- invalid stream handle, meaning the op failed
+ *              >0 -- successfully added a stream with a valid handle
+ *==========================================================================*/
+uint32_t mm_channel_link_stream(mm_channel_t *my_obj,
+        mm_camera_stream_link_t *stream_link)
+{
+    uint8_t idx = 0;
+    uint32_t s_hdl = 0;
+    mm_stream_t *stream_obj = NULL;
+    mm_stream_t *stream = NULL;
+
+    if (NULL == stream_link) {
+        CDBG_ERROR("%s : Invalid stream link", __func__);
+        return 0;
+    }
+
+    stream = mm_channel_util_get_stream_by_handler(stream_link->ch,
+            stream_link->stream_id);
+    if (NULL == stream) {
+        return 0;
+    }
+
+    /* check available stream */
+    for (idx = 0; idx < MAX_STREAM_NUM_IN_BUNDLE; idx++) {
+        if (MM_STREAM_STATE_NOTUSED == my_obj->streams[idx].state) {
+            stream_obj = &my_obj->streams[idx];
+            break;
+        }
+    }
+    if (NULL == stream_obj) {
+        CDBG_ERROR("%s: streams reach max, no more stream allowed to add",
+                __func__);
+        return s_hdl;
+    }
+
+    /* initialize stream object */
+    *stream_obj = *stream;
+    stream_obj->linked_stream = stream;
+    s_hdl = stream->my_hdl;
+
+    CDBG("%s : stream handle = %d", __func__, s_hdl);
+    return s_hdl;
+}
+
+/*===========================================================================
  * FUNCTION   : mm_channel_add_stream
  *
  * DESCRIPTION: add a stream into the channel
@@ -875,6 +943,17 @@ int32_t mm_channel_del_stream(mm_channel_t *my_obj,
         return rc;
     }
 
+    if (stream_obj->ch_obj != my_obj) {
+        /* Only unlink stream */
+        pthread_mutex_lock(&stream_obj->linked_stream->buf_lock);
+        stream_obj->linked_stream->is_linked = 0;
+        stream_obj->linked_stream->linked_obj = NULL;
+        pthread_mutex_unlock(&stream_obj->linked_stream->buf_lock);
+        memset(stream_obj, 0, sizeof(mm_stream_t));
+
+        return 0;
+    }
+
     rc = mm_stream_fsm_fn(stream_obj,
                           MM_STREAM_EVT_RELEASE,
                           NULL,
@@ -911,6 +990,11 @@ int32_t mm_channel_config_stream(mm_channel_t *my_obj,
         return rc;
     }
 
+    if (stream_obj->ch_obj != my_obj) {
+        /* No op. on linked streams */
+        return 0;
+    }
+
     /* set stream fmt */
     rc = mm_stream_fsm_fn(stream_obj,
                           MM_STREAM_EVT_SET_FMT,
@@ -939,6 +1023,7 @@ int32_t mm_channel_get_bundle_info(mm_channel_t *my_obj,
 {
     int i;
     mm_stream_t *s_obj = NULL;
+    cam_stream_type_t stream_type = CAM_STREAM_TYPE_DEFAULT;
     int32_t rc = 0;
 
     memset(bundle_info, 0, sizeof(cam_bundle_config_t));
@@ -949,7 +1034,9 @@ int32_t mm_channel_get_bundle_info(mm_channel_t *my_obj,
             s_obj = mm_channel_util_get_stream_by_handler(my_obj,
                                                           my_obj->streams[i].my_hdl);
             if (NULL != s_obj) {
-                if (CAM_STREAM_TYPE_METADATA != s_obj->stream_info->stream_type) {
+                stream_type = s_obj->stream_info->stream_type;
+                if ((CAM_STREAM_TYPE_METADATA != stream_type) &&
+                        (s_obj->ch_obj == my_obj)) {
                     bundle_info->stream_ids[bundle_info->num_of_streams++] =
                                                         s_obj->server_stream_id;
                 }
@@ -988,14 +1075,17 @@ int32_t mm_channel_start(mm_channel_t *my_obj)
     uint8_t num_streams_to_start = 0;
     mm_stream_t *s_obj = NULL;
     int meta_stream_idx = 0;
+    cam_stream_type_t stream_type = CAM_STREAM_TYPE_DEFAULT;
 
     for (i = 0; i < MAX_STREAM_NUM_IN_BUNDLE; i++) {
         if (my_obj->streams[i].my_hdl > 0) {
             s_obj = mm_channel_util_get_stream_by_handler(my_obj,
                                                           my_obj->streams[i].my_hdl);
             if (NULL != s_obj) {
+                stream_type = s_obj->stream_info->stream_type;
                 /* remember meta data stream index */
-                if (s_obj->stream_info->stream_type == CAM_STREAM_TYPE_METADATA) {
+                if ((stream_type == CAM_STREAM_TYPE_METADATA) &&
+                        (s_obj->ch_obj == my_obj)) {
                     meta_stream_idx = num_streams_to_start;
                 }
                 s_objs[num_streams_to_start++] = s_obj;
@@ -1019,8 +1109,11 @@ int32_t mm_channel_start(mm_channel_t *my_obj)
         my_obj->bundle.superbuf_queue.expected_frame_id_without_led = 0;
 
         for (i = 0; i < num_streams_to_start; i++) {
-            /* set bundled flag to streams */
-            s_objs[i]->is_bundled = 1;
+            /* Only bundle streams that belong to the channel */
+            if(s_objs[i]->ch_obj == my_obj) {
+                /* set bundled flag to streams */
+                s_objs[i]->is_bundled = 1;
+            }
             /* init bundled streams to invalid value -1 */
             my_obj->bundle.superbuf_queue.bundled_streams[i] = s_objs[i]->my_hdl;
         }
@@ -1040,6 +1133,15 @@ int32_t mm_channel_start(mm_channel_t *my_obj)
     }
 
     for (i = 0; i < num_streams_to_start; i++) {
+        /* stream that are linked to this channel should not be started */
+        if (s_objs[i]->ch_obj != my_obj) {
+            pthread_mutex_lock(&s_objs[i]->linked_stream->buf_lock);
+            s_objs[i]->linked_stream->linked_obj = my_obj;
+            s_objs[i]->linked_stream->is_linked = 1;
+            pthread_mutex_unlock(&s_objs[i]->linked_stream->buf_lock);
+            continue;
+        }
+
         /* all streams within a channel should be started at the same time */
         if (s_objs[i]->state == MM_STREAM_STATE_ACTIVE) {
             CDBG_ERROR("%s: stream already started idx(%d)", __func__, i);
@@ -1081,6 +1183,22 @@ int32_t mm_channel_start(mm_channel_t *my_obj)
     /* error handling */
     if (0 != rc) {
         for (j=0; j<=i; j++) {
+            if (s_objs[j]->ch_obj != my_obj) {
+                /* Only unlink stream */
+                pthread_mutex_lock(&s_objs[j]->linked_stream->buf_lock);
+                s_objs[j]->linked_stream->is_linked = 0;
+                s_objs[j]->linked_stream->linked_obj = NULL;
+                pthread_mutex_unlock(&s_objs[j]->linked_stream->buf_lock);
+
+                if (TRUE == my_obj->bundle.is_active) {
+                    mm_channel_superbuf_flush(my_obj,
+                            &my_obj->bundle.superbuf_queue,
+                            s_objs[j]->stream_info->stream_type);
+                }
+                memset(s_objs[j], 0, sizeof(mm_stream_t));
+
+                continue;
+            }
             /* stop streams*/
             mm_stream_fsm_fn(s_objs[j],
                              MM_STREAM_EVT_STOP,
@@ -1137,14 +1255,17 @@ int32_t mm_channel_stop(mm_channel_t *my_obj)
     uint8_t num_streams_to_stop = 0;
     mm_stream_t *s_obj = NULL;
     int meta_stream_idx = 0;
+    cam_stream_type_t stream_type = CAM_STREAM_TYPE_DEFAULT;
 
     for (i = 0; i < MAX_STREAM_NUM_IN_BUNDLE; i++) {
         if (my_obj->streams[i].my_hdl > 0) {
             s_obj = mm_channel_util_get_stream_by_handler(my_obj,
                                                           my_obj->streams[i].my_hdl);
             if (NULL != s_obj) {
+                stream_type = s_obj->stream_info->stream_type;
                 /* remember meta data stream index */
-                if (s_obj->stream_info->stream_type == CAM_STREAM_TYPE_METADATA) {
+                if ((stream_type == CAM_STREAM_TYPE_METADATA) &&
+                        (s_obj->ch_obj == my_obj)) {
                     meta_stream_idx = num_streams_to_stop;
                 }
                 s_objs[num_streams_to_stop++] = s_obj;
@@ -1160,6 +1281,24 @@ int32_t mm_channel_stop(mm_channel_t *my_obj)
     }
 
     for (i = 0; i < num_streams_to_stop; i++) {
+        /* stream that are linked to this channel should not be stopped */
+        if (s_objs[i]->ch_obj != my_obj) {
+            /* Only unlink stream */
+            pthread_mutex_lock(&s_objs[i]->linked_stream->buf_lock);
+            s_objs[i]->linked_stream->is_linked = 0;
+            s_objs[i]->linked_stream->linked_obj = NULL;
+            pthread_mutex_unlock(&s_objs[i]->linked_stream->buf_lock);
+
+            if (TRUE == my_obj->bundle.is_active) {
+                mm_channel_superbuf_flush(my_obj,
+                        &my_obj->bundle.superbuf_queue,
+                        s_objs[i]->stream_info->stream_type);
+            }
+
+            memset(s_objs[i], 0, sizeof(mm_stream_t));
+            continue;
+        }
+
         /* stream off */
         mm_stream_fsm_fn(s_objs[i],
                          MM_STREAM_EVT_STOP,
@@ -1181,14 +1320,14 @@ int32_t mm_channel_stop(mm_channel_t *my_obj)
 
         /* deinit superbuf queue */
         mm_channel_superbuf_queue_deinit(&my_obj->bundle.superbuf_queue);
-
-        /* memset bundle info */
-        memset(&my_obj->bundle, 0, sizeof(mm_channel_bundle_t));
     }
 
     /* since all streams are stopped, we are safe to
      * release all buffers allocated in stream */
     for (i = 0; i < num_streams_to_stop; i++) {
+        if (s_objs[i]->ch_obj != my_obj) {
+            continue;
+        }
         /* put buf back */
         mm_stream_fsm_fn(s_objs[i],
                          MM_STREAM_EVT_PUT_BUF,
@@ -1356,10 +1495,18 @@ int32_t mm_channel_qbuf(mm_channel_t *my_obj,
     mm_stream_t* s_obj = mm_channel_util_get_stream_by_handler(my_obj, buf->stream_id);
 
     if (NULL != s_obj) {
-        rc = mm_stream_fsm_fn(s_obj,
-                              MM_STREAM_EVT_QBUF,
-                              (void *)buf,
-                              NULL);
+        if (s_obj->ch_obj != my_obj) {
+            /* Redirect to linked stream */
+            rc = mm_stream_fsm_fn(s_obj->linked_stream,
+                    MM_STREAM_EVT_QBUF,
+                    (void *)buf,
+                    NULL);
+        } else {
+            rc = mm_stream_fsm_fn(s_obj,
+                    MM_STREAM_EVT_QBUF,
+                    (void *)buf,
+                    NULL);
+        }
     }
 
     return rc;
@@ -1389,6 +1536,11 @@ int32_t mm_channel_set_stream_parm(mm_channel_t *my_obj,
     mm_stream_t* s_obj = mm_channel_util_get_stream_by_handler(my_obj,
                                                                payload->stream_id);
     if (NULL != s_obj) {
+        if (s_obj->ch_obj != my_obj) {
+            /* No op. on linked streams */
+            return 0;
+        }
+
         rc = mm_stream_fsm_fn(s_obj,
                               MM_STREAM_EVT_SET_PARM,
                               (void *)payload,
@@ -1424,6 +1576,11 @@ int32_t mm_channel_get_stream_parm(mm_channel_t *my_obj,
     mm_stream_t* s_obj = mm_channel_util_get_stream_by_handler(my_obj,
                                                                payload->stream_id);
     if (NULL != s_obj) {
+        if (s_obj->ch_obj != my_obj) {
+            /* No op. on linked streams */
+            return 0;
+        }
+
         rc = mm_stream_fsm_fn(s_obj,
                               MM_STREAM_EVT_GET_PARM,
                               (void *)payload,
@@ -1458,6 +1615,11 @@ int32_t mm_channel_do_stream_action(mm_channel_t *my_obj,
     mm_stream_t* s_obj = mm_channel_util_get_stream_by_handler(my_obj,
                                                                payload->stream_id);
     if (NULL != s_obj) {
+        if (s_obj->ch_obj != my_obj) {
+            /* No op. on linked streams */
+            return 0;
+        }
+
         rc = mm_stream_fsm_fn(s_obj,
                               MM_STREAM_EVT_DO_ACTION,
                               (void *)payload,
@@ -1487,6 +1649,11 @@ int32_t mm_channel_map_stream_buf(mm_channel_t *my_obj,
     mm_stream_t* s_obj = mm_channel_util_get_stream_by_handler(my_obj,
                                                                payload->stream_id);
     if (NULL != s_obj) {
+        if (s_obj->ch_obj != my_obj) {
+            /* No op. on linked streams */
+            return 0;
+        }
+
         rc = mm_stream_map_buf(s_obj,
                                payload->buf_type,
                                payload->buf_idx,
@@ -1518,6 +1685,11 @@ int32_t mm_channel_unmap_stream_buf(mm_channel_t *my_obj,
     mm_stream_t* s_obj = mm_channel_util_get_stream_by_handler(my_obj,
                                                                payload->stream_id);
     if (NULL != s_obj) {
+        if (s_obj->ch_obj != my_obj) {
+            /* No op. on linked streams */
+            return 0;
+        }
+
         rc = mm_stream_unmap_buf(s_obj, payload->buf_type,
                                  payload->buf_idx, payload->plane_idx);
     }
@@ -1630,7 +1802,8 @@ int32_t mm_channel_handle_metadata(
         goto end;
     }
 
-    if (CAM_STREAM_TYPE_METADATA == stream_obj->stream_info->stream_type) {
+    if ((CAM_STREAM_TYPE_METADATA == stream_obj->stream_info->stream_type) &&
+            (stream_obj->ch_obj == ch_obj)) {
         const cam_metadata_info_t *metadata;
         metadata = (const cam_metadata_info_t *)buf_info->buf->buffer;
 
@@ -1687,7 +1860,8 @@ int32_t mm_channel_handle_metadata(
                 const int max_future_frame_offset = 100;
                 queue->expected_frame_id += max_future_frame_offset;
 
-                mm_channel_superbuf_flush(ch_obj, queue);
+                mm_channel_superbuf_flush(ch_obj,
+                        queue, CAM_STREAM_TYPE_DEFAULT);
 
                 ch_obj->needLEDFlash = TRUE;
             } else {
@@ -2121,16 +2295,18 @@ int32_t mm_channel_superbuf_skip(mm_channel_t* my_obj,
  * PARAMETERS :
  *   @my_obj  : channel object
  *   @queue   : superbuf queue
+ *   @cam_type: flush only particular type (default flushes all)
  *
  * RETURN     : int32_t type of status
  *              0  -- success
  *              -1 -- failure
  *==========================================================================*/
 int32_t mm_channel_superbuf_flush(mm_channel_t* my_obj,
-                                  mm_channel_queue_t * queue)
+        mm_channel_queue_t * queue, cam_stream_type_t cam_type)
 {
     int32_t rc = 0, i;
     mm_channel_queue_node_t* super_buf = NULL;
+    cam_stream_type_t stream_type = CAM_STREAM_TYPE_DEFAULT;
 
     /* bufdone bufs */
     pthread_mutex_lock(&queue->que.lock);
@@ -2138,7 +2314,11 @@ int32_t mm_channel_superbuf_flush(mm_channel_t* my_obj,
     while (super_buf != NULL) {
         for (i=0; i<super_buf->num_of_bufs; i++) {
             if (NULL != super_buf->super_buf[i].buf) {
-                mm_channel_qbuf(my_obj, super_buf->super_buf[i].buf);
+                stream_type = super_buf->super_buf[i].buf->stream_type;
+                if ((CAM_STREAM_TYPE_DEFAULT == cam_type) ||
+                        (cam_type == stream_type)) {
+                    mm_channel_qbuf(my_obj, super_buf->super_buf[i].buf);
+                }
             }
         }
         free(super_buf);
