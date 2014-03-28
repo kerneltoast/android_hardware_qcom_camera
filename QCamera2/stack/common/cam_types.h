@@ -1420,6 +1420,8 @@ typedef struct {
 #define CAM_QCOM_FEATURE_UBIFOCUS       (1<<12)
 #define CAM_QCOM_FEATURE_CHROMA_FLASH   (1<<13)
 #define CAM_QCOM_FEATURE_OPTIZOOM       (1<<14)
+#define CAM_QCOM_FEATURE_LLVD           (1<<15)
+#define CAM_QCOM_FEATURE_DIS20          (1<<16)
 
 // Debug mask
 #define HAL_DEBUG_MASK_HAL                 (1<<0)
