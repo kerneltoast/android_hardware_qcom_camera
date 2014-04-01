@@ -5260,6 +5260,43 @@ int32_t QCameraParameters::getRedEyeValue()
 }
 
 /*===========================================================================
+ * FUNCTION   : setLongshotEnable
+ *
+ * DESCRIPTION: set a flag indicating longshot mode
+ *
+ * PARAMETERS :
+ *   @enable  : true - Longshot enabled
+ *              false - Longshot disabled
+ *==========================================================================*/
+int32_t QCameraParameters::setLongshotEnable(bool enable)
+{
+    int32_t rc = NO_ERROR;
+    int8_t value = enable;
+
+    if(initBatchUpdate(m_pParamBuf) < 0 ) {
+        ALOGE("%s:Failed to initialize group update table", __func__);
+        return BAD_TYPE;
+    }
+
+    rc = AddSetParmEntryToBatch(m_pParamBuf,
+          CAM_INTF_PARM_LONGSHOT_ENABLE,
+          sizeof(value),
+          &value);
+    if (rc != NO_ERROR) {
+        ALOGE("%s:Failed to update table", __func__);
+        return rc;
+    }
+
+    rc = commitSetBatch();
+    if (rc != NO_ERROR) {
+        ALOGE("%s:Failed to parameter changes", __func__);
+        return rc;
+    }
+
+    return rc;
+}
+
+/*===========================================================================
  * FUNCTION   : setFlash
  *
  * DESCRIPTION: set f;ash mode
