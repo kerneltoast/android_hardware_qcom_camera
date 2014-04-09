@@ -5689,13 +5689,14 @@ bool QCamera2HardwareInterface::needRotationReprocess()
         return false;
     }
 
-        if ((gCamCapability[mCameraId]->qcom_supported_feature_mask & CAM_QCOM_FEATURE_ROTATION) > 0 &&
-            (getJpegRotation() > 0) && (mParameters.getRecordingHintValue() == false)) {
-            // current rotation is not zero, and pp has the capability to process rotation
-            ALOGD("%s: need to do reprocess for rotation=%d", __func__, getJpegRotation());
-            pthread_mutex_unlock(&m_parm_lock);
-            return true;
-        }
+    if ( ((gCamCapability[mCameraId]->qcom_supported_feature_mask & CAM_QCOM_FEATURE_ROTATION) > 0
+        && (getJpegRotation() > 0) && (mParameters.getRecordingHintValue() == false)) ||
+            mParameters.isHDREnabled() ) {
+        // current rotation is not zero, and pp has the capability to process rotation
+        ALOGD("%s: need to do reprocess for rotation=%d", __func__, getJpegRotation());
+        pthread_mutex_unlock(&m_parm_lock);
+        return true;
+    }
 
     pthread_mutex_unlock(&m_parm_lock);
     return false;
