@@ -1147,7 +1147,8 @@ void QCamera2HardwareInterface::metadata_stream_cb_routine(mm_camera_super_buf_t
             ALOGE("%s: processHDRData failed", __func__);
         }
     }
-     /* Update 3a info */
+
+    /* Update 3a info */
     if(pMetaData->is_ae_params_valid) {
         pme->mExifParams.ae_params = pMetaData->ae_params;
         pme->mFlashNeeded = pMetaData->ae_params.flash_needed;
@@ -1177,6 +1178,23 @@ void QCamera2HardwareInterface::metadata_stream_cb_routine(mm_camera_super_buf_t
         } else {
             ALOGE("%s: No memory for awb_update qcamera_sm_internal_evt_payload_t", __func__);
         }
+    }
+
+    /* Update 3A debug info */
+    if (pMetaData->is_ae_exif_debug_valid) {
+        pme->mExifParams.ae_debug_params = pMetaData->ae_exif_debug_params;
+    }
+    if (pMetaData->is_awb_exif_debug_valid) {
+        pme->mExifParams.awb_debug_params = pMetaData->awb_exif_debug_params;
+    }
+    if (pMetaData->is_af_exif_debug_valid) {
+        pme->mExifParams.af_debug_params = pMetaData->af_exif_debug_params;
+    }
+    if(pMetaData->is_asd_exif_debug_valid) {
+        pme->mExifParams.asd_debug_params = pMetaData->asd_exif_debug_params;
+    }
+    if(pMetaData->is_stats_buffer_exif_debug_valid) {
+        pme->mExifParams.stats_debug_params = pMetaData->stats_buffer_exif_debug_params;
     }
 
     /*Update Sensor info*/
