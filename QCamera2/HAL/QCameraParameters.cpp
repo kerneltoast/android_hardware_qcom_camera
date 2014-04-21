@@ -6175,6 +6175,23 @@ bool QCameraParameters::isOptiZoomEnabled()
 }
 
 /*===========================================================================
+ * FUNCTION   : isDifferentFlipZSL
+ *
+ * DESCRIPTION: checks whether live preview and snapshot flip differ
+ *
+ * PARAMETERS :
+ *
+ * RETURN     : true - different, false - equal
+ *
+ *==========================================================================*/
+bool QCameraParameters::isDifferentFlipZSL()
+{
+    return (getFlipMode(CAM_STREAM_TYPE_SNAPSHOT) !=
+        getFlipMode(CAM_STREAM_TYPE_PREVIEW))
+            && m_bZslMode;
+}
+
+/*===========================================================================
  * FUNCTION   : commitAFBracket
  *
  * DESCRIPTION: commit AF Bracket.

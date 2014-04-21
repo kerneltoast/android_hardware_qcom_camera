@@ -588,6 +588,7 @@ public:
     inline bool isUbiFocusEnabled() {return m_bAFBracketingOn;};
     inline bool isChromaFlashEnabled() {return m_bChromaFlashOn;};
     bool isOptiZoomEnabled();
+    bool isDifferentFlipZSL();
     int32_t commitAFBracket(cam_af_bracketing_t afBracket);
     int32_t commitFlashBracket(cam_flash_bracketing_t flashBracket);
     int32_t set3ALock(const char *lockStr);
@@ -598,7 +599,7 @@ public:
     inline uint32_t UfOutputCount() {
         return m_pCapability->ubifocus_af_bracketing_need.output_count;};
     inline bool generateThumbFromMain() {return isUbiFocusEnabled() ||
-        isChromaFlashEnabled() || isOptiZoomEnabled(); }
+        isChromaFlashEnabled() || isOptiZoomEnabled() || isDifferentFlipZSL(); }
     int32_t  updateCurrentFocusPosition(int32_t pos);
     bool isDisplayFrameNeeded() { return m_bDisplayFrame; };
     int32_t setDisplayFrame(bool enabled) {m_bDisplayFrame=enabled; return 0;};
