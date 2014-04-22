@@ -67,7 +67,24 @@ inline void __null_log(int, const char *, const char *, ...) {}
 #define ALOGI(...) do { __null_log(0, LOG_TAG,__VA_ARGS__); } while (0)
 #endif
 
+#ifdef CDBG
+#undef CDBG
+#define CDBG(...) do{} while(0)
 #endif
+
+#else
+
+#ifdef CDBG
+#undef CDBG
+#endif //#ifdef CDBG
+#define CDBG(fmt, args...) ALOGD_IF(gCamHalLogLevel >= 2, fmt, ##args)
+
+#ifdef CDBG_HIGH
+#undef CDBG_HIGH
+#endif //#ifdef CDBG_HIGH
+#define CDBG_HIGH(fmt, args...) ALOGD_IF(gCamHalLogLevel >= 1, fmt, ##args)
+
+#endif // DISABLE_DEBUG_LOG
 
 namespace qcamera {
 
@@ -109,6 +126,8 @@ typedef struct {
 #define QCAMERA_ION_USE_NOCACHE false
 #define MAX_ONGOING_JOBS 25
 #define QCAMERA_MAX_FILEPATH_LENGTH 50
+
+extern volatile uint32_t gCamHalLogLevel;
 
 /** IMG_SWAP
  *  @a: input a
@@ -487,6 +506,7 @@ private:
                                    void *cookie,
                                    int32_t cbStatus);
     static int32_t getEffectValue(const char *effect);
+    static void getLogLevel();
 
 private:
     camera_device_t   mCameraDevice;
