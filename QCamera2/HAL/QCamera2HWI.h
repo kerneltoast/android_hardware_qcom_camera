@@ -411,12 +411,12 @@ private:
     bool removeSizeFromList(cam_dimension_t* size_list,
                             uint8_t length,
                             cam_dimension_t size);
-    int32_t configureBracketing();
+    int32_t configureAdvancedCapture();
     int32_t configureAFBracketing(bool enable = true);
     int32_t configureFlashBracketing();
-    int32_t startBracketing(QCameraPicChannel *pZSLchannel);
+    int32_t startAdvancedCapture(QCameraPicChannel *pChannel);
     int32_t configureZSLHDRBracketing();
-    int32_t startZslBracketing(QCameraPicChannel *pZSLchannel);
+    int32_t startZslAdvancedCapture(QCameraPicChannel *pChannel);
     int32_t configureOptiZoom();
     int32_t configureAEBracketing();
     inline void setOutputImageCount(uint32_t aCount) {mOutputCount = aCount;}
@@ -491,7 +491,6 @@ private:
     QCameraParameters mParameters;
     int32_t               mMsgEnabled;
     int                   mStoreMetaDataInFrame;
-    int                   mNumSnapshots;
 
     camera_notify_callback         mNotifyCb;
     camera_data_callback           mDataCb;

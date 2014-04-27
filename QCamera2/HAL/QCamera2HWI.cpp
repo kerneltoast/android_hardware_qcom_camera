@@ -972,7 +972,6 @@ QCamera2HardwareInterface::QCamera2HardwareInterface(int cameraId)
       mPreviewWindow(NULL),
       mMsgEnabled(0),
       mStoreMetaDataInFrame(0),
-      mNumSnapshots(0),
       m_stateMachine(this),
       m_postprocessor(this),
       m_thermalAdapter(QCameraThermalAdapter::getInstance()),
@@ -2266,9 +2265,9 @@ bool QCamera2HardwareInterface::processUFDumps(qcamera_jpeg_evt_payload_t *evt)
 }
 
 /*===========================================================================
- * FUNCTION   : configureBracketing
+ * FUNCTION   : configureAdvancedCapture
  *
- * DESCRIPTION: configure Bracketing.
+ * DESCRIPTION: configure Advanced Capture.
  *
  * PARAMETERS : none
  *
@@ -2276,7 +2275,7 @@ bool QCamera2HardwareInterface::processUFDumps(qcamera_jpeg_evt_payload_t *evt)
  *              NO_ERROR  -- success
  *              none-zero failure code
  *==========================================================================*/
-int32_t QCamera2HardwareInterface::configureBracketing()
+int32_t QCamera2HardwareInterface::configureAdvancedCapture()
 {
     ALOGD("%s: E",__func__);
     int32_t rc = NO_ERROR;
@@ -2294,7 +2293,7 @@ int32_t QCamera2HardwareInterface::configureBracketing()
     } else if (mParameters.isAEBracketEnabled()) {
         rc = configureAEBracketing();
     } else {
-        ALOGE("%s: No Bracketing feature enabled!! ",__func__);
+        ALOGE("%s: No Advanced Capture feature enabled!! ", __func__);
         rc = BAD_VALUE;
     }
     ALOGD("%s: X",__func__);
@@ -2487,32 +2486,33 @@ int32_t QCamera2HardwareInterface::configureOptiZoom()
 }
 
 /*===========================================================================
- * FUNCTION   : startBracketing
+ * FUNCTION   : startAdvancedCapture
  *
- * DESCRIPTION: starts bracketing based on bracket type(AF/AE/FLASH).
+ * DESCRIPTION: starts advanced capture based on capture type
  *
  * PARAMETERS :
  *   @pChannel : channel.
- *   @type    : 3A bracketing type.
  *
  * RETURN     : int32_t type of status
  *              NO_ERROR  -- success
  *              none-zero failure code
  *==========================================================================*/
-int32_t QCamera2HardwareInterface::startBracketing(
+int32_t QCamera2HardwareInterface::startAdvancedCapture(
     QCameraPicChannel *pChannel)
 {
     ALOGD("%s: Start bracketig",__func__);
     int32_t rc = NO_ERROR;
 
     if(mParameters.isUbiFocusEnabled()) {
-        rc = pChannel->startBracketing(MM_CAMERA_AF_BRACKETING);
+        rc = pChannel->startAdvancedCapture(MM_CAMERA_AF_BRACKETING);
     } else if (mParameters.isChromaFlashEnabled()) {
-        rc = pChannel->startBracketing(MM_CAMERA_FLASH_BRACKETING);
+        rc = pChannel->startAdvancedCapture(MM_CAMERA_FLASH_BRACKETING);
     } else if (mParameters.isHDREnabled() || mParameters.isAEBracketEnabled()) {
-        rc = pChannel->startBracketing(MM_CAMERA_AE_BRACKETING);
+        rc = pChannel->startAdvancedCapture(MM_CAMERA_AE_BRACKETING);
+    } else if (mParameters.isOptiZoomEnabled()) {
+        rc = pChannel->startAdvancedCapture(MM_CAMERA_ZOOM_1X);
     } else {
-        ALOGE("%s: No Bracketing feature enabled!",__func__);
+        ALOGE("%s: No Advanced Capture feature enabled!",__func__);
         rc = BAD_VALUE;
     }
     return rc;
@@ -2539,13 +2539,12 @@ int QCamera2HardwareInterface::takePicture()
             mParameters.isHDREnabled() ||
             mParameters.isChromaFlashEnabled() ||
             mParameters.isAEBracketEnabled()) {
-        rc = configureBracketing();
+        rc = configureAdvancedCapture();
         if (rc == NO_ERROR) {
-            numSnapshots = mParameters.getBurstCountForBracketing();
+            numSnapshots = mParameters.getBurstCountForAdvancedCapture();
         }
     }
     ALOGE("%s: numSnapshot = %d",__func__, numSnapshots);
-    mNumSnapshots = numSnapshots;
 
     getOrientation();
     ALOGD("%s: E", __func__);
@@ -2560,20 +2559,17 @@ int QCamera2HardwareInterface::takePicture()
                 return rc;
             }
             if (mParameters.isUbiFocusEnabled() ||
+                    mParameters.isOptiZoomEnabled() ||
                     mParameters.isHDREnabled() ||
                     mParameters.isChromaFlashEnabled() ||
                     mParameters.isAEBracketEnabled()) {
-                rc = startBracketing(pZSLChannel);
+                rc = startAdvancedCapture(pZSLChannel);
                 if (rc != NO_ERROR) {
-                    ALOGE("%s: cannot start zsl bracketing", __func__);
+                    ALOGE("%s: cannot start zsl advanced capture", __func__);
                     return rc;
                 }
             }
-            if (mParameters.isOptiZoomEnabled()) {
-                rc = pZSLChannel->takePictureContinuous();
-            } else {
-                rc = pZSLChannel->takePicture(numSnapshots);
-            }
+            rc = pZSLChannel->takePicture(numSnapshots);
             if (rc != NO_ERROR) {
                 ALOGE("%s: cannot take ZSL picture", __func__);
                 m_postprocessor.stop();
@@ -2660,9 +2656,9 @@ int QCamera2HardwareInterface::takePicture()
                 if (NULL != pCapChannel) {
                     if (mParameters.isUbiFocusEnabled()|
                         mParameters.isChromaFlashEnabled()) {
-                        rc = startBracketing(pCapChannel);
+                        rc = startAdvancedCapture(pCapChannel);
                         if (rc != NO_ERROR) {
-                            ALOGE("%s: cannot start bracketing", __func__);
+                            ALOGE("%s: cannot start advanced capture", __func__);
                             return rc;
                         }
                     }
