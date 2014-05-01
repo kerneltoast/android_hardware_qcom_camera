@@ -8415,14 +8415,14 @@ int32_t QCameraParameters::commitSetBatch()
  *==========================================================================*/
 int32_t QCameraParameters::commitGetBatch()
 {
+    int32_t rc = NO_ERROR;
     if (m_pParamBuf->num_entry > 0) {
-        return m_pCamOpsTbl->ops->get_parms(m_pCamOpsTbl->camera_handle,
+        rc = m_pCamOpsTbl->ops->get_parms(m_pCamOpsTbl->camera_handle,
                                                           (void *)m_pParamBuf);
         ALOGD("%s:waiting for commitGetBatch to complete",__func__);
         sem_wait(&m_pParamBuf->cam_sync_sem);
-    } else {
-        return NO_ERROR;
     }
+    return rc;
 }
 
 /*===========================================================================
