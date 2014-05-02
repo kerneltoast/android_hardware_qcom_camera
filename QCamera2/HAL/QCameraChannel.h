@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013, The Linux Foundataion. All rights reserved.
+/* Copyright (c) 2012-2014, The Linux Foundataion. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -124,17 +124,28 @@ public:
                                        uint32_t burstNum,
                                        cam_padding_info_t *paddingInfo,
                                        QCameraParameters &param,
-                                       bool contStream);
+                                       bool contStream,
+                                       bool offline);
     // online reprocess
     int32_t doReprocess(mm_camera_super_buf_t *frame);
     // offline reprocess
     int32_t doReprocess(int buf_fd, uint32_t buf_length, int32_t &ret_val);
+    int32_t doReprocessOffline(mm_camera_super_buf_t *frame);
+    int32_t stop();
 
 private:
     QCameraStream *getStreamBySrouceHandle(uint32_t srcHandle);
 
+    typedef struct {
+        QCameraStream *stream;
+        cam_mapping_buf_type type;
+        int index;
+    } OfflineBuffer;
+
     uint32_t mSrcStreamHandles[MAX_STREAM_NUM_IN_BUNDLE];
     QCameraChannel *m_pSrcChannel; // ptr to source channel for reprocess
+    android::List<OfflineBuffer> mOfflineBuffers;
+
 };
 
 }; // namespace qcamera
