@@ -6541,11 +6541,26 @@ bool QCamera2HardwareInterface::isRegularCapture()
 void QCamera2HardwareInterface::getLogLevel()
 {
     char prop[PROPERTY_VALUE_MAX];
+    uint32_t temp;
+    uint32_t log_level;
+    uint32_t debug_mask;
     memset(prop, 0, sizeof(prop));
 
-    property_get("persist.camera.logs", prop, "1");
-    gCamHalLogLevel = atoi(prop);
+    /*  Higher 4 bits : Value of Debug log level (Default level is 1 to print all CDBG_HIGH)
+        Lower 28 bits : Control mode for sub module logging(Only 3 sub modules in HAL)
+                        0x1 for HAL
+                        0x10 for mm-camera-interface
+                        0x100 for mm-jpeg-interface  */
+    property_get("persist.camera.hal.debug.mask", prop, "268435463"); // 0x10000007=268435463
+    temp = atoi(prop);
+    log_level = ((temp >> 28) & 0xF);
+    debug_mask = (temp & HAL_DEBUG_MASK_HAL);
+    if (debug_mask > 0)
+        gCamHalLogLevel = log_level;
+    else
+        gCamHalLogLevel = 0; // Debug logs are not required if debug_mask is zero
 
+    ALOGI("%s gCamHalLogLevel=%d",__func__, gCamHalLogLevel);
     return;
 }
 
