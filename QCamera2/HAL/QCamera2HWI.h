@@ -352,6 +352,8 @@ private:
     inline int getFlash(){ return mFlash; }
     inline int getFlashPresence(){ return mFlashPresence; }
     inline int getRedeye(){ return mRedEye; }
+    inline bool getCancelAutoFocus(){ return mCancelAutoFocus; }
+    inline void setCancelAutoFocus(bool flag){ mCancelAutoFocus = flag; }
     QCameraExif *getExifData();
 
     int32_t processAutoFocusEvent(cam_auto_focus_data_t &focus_data);
@@ -533,6 +535,7 @@ private:
     int mDumpSkipCnt; // frame skip count
     mm_jpeg_exif_params_t mExifParams;
     qcamera_thermal_level_enum_t mThermalLevel;
+    bool mCancelAutoFocus;
     bool m_HDRSceneEnabled;
     bool mLongshotEnabled;
     int32_t m_max_pic_width;
