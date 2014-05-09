@@ -376,6 +376,9 @@ int32_t QCameraPostProcessor::getJpegEncodingConfig(mm_jpeg_encode_params_t& enc
     encode_parm.main_dim.src_dim = src_dim;
     encode_parm.main_dim.dst_dim = dst_dim;
 
+    m_dst_dim = dst_dim;
+    m_src_dim = src_dim;
+
     encode_parm.jpeg_cb = mJpegCB;
     encode_parm.userdata = mJpegUserData;
 
@@ -752,8 +755,9 @@ int32_t QCameraPostProcessor::processJpegEvt(qcamera_jpeg_evt_payload_t *evt)
 
         ALOGD("[KPI Perf] %s : jpeg job %d", __func__, evt->jobId);
 
-        if (m_parent->mDataCb == NULL ||
-            m_parent->msgTypeEnabledWithLock(CAMERA_MSG_COMPRESSED_IMAGE) == 0 ) {
+        if ((false == m_parent->m_bIntEvtPending) &&
+            (m_parent->mDataCb == NULL ||
+            m_parent->msgTypeEnabledWithLock(CAMERA_MSG_COMPRESSED_IMAGE) == 0 )) {
             ALOGD("%s: No dataCB or CAMERA_MSG_COMPRESSED_IMAGE not enabled",
                   __func__);
             rc = NO_ERROR;
@@ -770,7 +774,14 @@ int32_t QCameraPostProcessor::processJpegEvt(qcamera_jpeg_evt_payload_t *evt)
         m_parent->dumpJpegToFile(evt->out_data.buf_vaddr,
                                   evt->out_data.buf_filled_len,
                                   evt->jobId);
-        ALOGD("%s: Dump jpeg_size=%d", __func__, evt->out_data.buf_filled_len);
+        if(true == m_parent->m_bIntEvtPending) {
+          //signal the eztune condition variable
+          pthread_mutex_lock(&m_parent->m_int_lock);
+          pthread_cond_signal(&m_parent->m_int_cond);
+          pthread_mutex_unlock(&m_parent->m_int_lock);
+          m_dataProcTh.sendCmd(CAMERA_CMD_TYPE_DO_NEXT_JOB, FALSE, FALSE);
+          return rc;
+        }
 
         /* check if the all the captures are done */
         if (m_parent->mParameters.isUbiRefocus() &&

@@ -604,6 +604,7 @@ typedef enum {
     CAM_EVENT_TYPE_ZOOM_DONE             = (1<<2),
     CAM_EVENT_TYPE_REPROCESS_STAGE_DONE  = (1<<3),
     CAM_EVENT_TYPE_DAEMON_DIED           = (1<<4),
+    CAM_EVENT_TYPE_INT_TAKE_PIC          = (1<<5),
     CAM_EVENT_TYPE_MAX
 } cam_event_type_t;
 
@@ -896,6 +897,12 @@ typedef struct {
 }tuning_params_t;
 
 typedef struct {
+    cam_dimension_t dim;
+    int32_t size;
+    char path[50];
+} cam_int_evt_params_t;
+
+typedef struct {
   uint8_t private_mobicat_af_data[MAX_AF_STATS_DATA_SIZE];
 } cam_chromatix_mobicat_af_t;
 
@@ -1099,6 +1106,7 @@ typedef enum {
     CAM_INTF_PARM_GET_OUTPUT_CROP,
 
     CAM_INTF_PARM_EZTUNE_CMD,
+    CAM_INTF_PARM_INT_EVT,
 
     /* specific to HAL3 */
     /* Whether the metadata maps to a valid frame number */

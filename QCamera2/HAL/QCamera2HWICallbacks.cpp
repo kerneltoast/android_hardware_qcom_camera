@@ -31,6 +31,7 @@
 
 #include <time.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <utils/Errors.h>
 #include <utils/Timers.h>
 #include "QCamera2HWI.h"
@@ -1289,7 +1290,8 @@ void QCamera2HardwareInterface::dumpJpegToFile(const void *data,
     memset(buf, 0, sizeof(buf));
     memset(&dim, 0, sizeof(dim));
 
-    if((enabled & QCAMERA_DUMP_FRM_JPEG) && data) {
+    if(((enabled & QCAMERA_DUMP_FRM_JPEG) && data) ||
+        ((true == m_bIntEvtPending) && data)) {
         frm_num = ((enabled & 0xffff0000) >> 16);
         if(frm_num == 0) {
             frm_num = 10; //default 10 frames
@@ -1309,10 +1311,15 @@ void QCamera2HardwareInterface::dumpJpegToFile(const void *data,
             }
             if (mDumpFrmCnt >= 0 && mDumpFrmCnt <= frm_num) {
                 snprintf(buf, sizeof(buf), "/data/%d_%d.jpg", mDumpFrmCnt, index);
+                if (true == m_bIntEvtPending) {
+                    strncpy(m_BackendFileName, buf, sizeof(buf));
+                    mBackendFileSize = size;
+                }
 
                 int file_fd = open(buf, O_RDWR | O_CREAT, 0777);
-                if (file_fd > 0) {
+                if (file_fd >= 0) {
                     int written_len = write(file_fd, data, size);
+                    fchmod(file_fd, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
                     ALOGD("%s: written number of bytes %d\n", __func__, written_len);
                     close(file_fd);
                 } else {

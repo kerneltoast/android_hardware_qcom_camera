@@ -607,6 +607,7 @@ public:
     int32_t setDisplayFrame(bool enabled) {m_bDisplayFrame=enabled; return 0;};
     bool isAdvCamFeaturesEnabled() {return isUbiFocusEnabled() ||
         isChromaFlashEnabled() || isOptiZoomEnabled() || isHDREnabled();}
+    int32_t setIntEvent(cam_int_evt_params_t params);
 
 private:
     int32_t setPreviewSize(const QCameraParameters& );
