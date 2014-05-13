@@ -4734,7 +4734,8 @@ QCameraReprocessChannel *QCamera2HardwareInterface::addReprocChannel(
             effect = mParameters.get(CameraParameters::KEY_EFFECT);
             pp_config.effect = getEffectValue(effect);
         }
-        if (gCamCapability[mCameraId]->min_required_pp_mask & CAM_QCOM_FEATURE_SHARPNESS) {
+        if ((gCamCapability[mCameraId]->min_required_pp_mask & CAM_QCOM_FEATURE_SHARPNESS) &&
+                !mParameters.isOptiZoomEnabled()) {
             pp_config.feature_mask |= CAM_QCOM_FEATURE_SHARPNESS;
             pp_config.sharpness = mParameters.getInt(QCameraParameters::KEY_QC_SHARPNESS);
         }
