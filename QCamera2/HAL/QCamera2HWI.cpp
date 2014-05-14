@@ -1458,7 +1458,8 @@ uint8_t QCamera2HardwareInterface::getBufNumRequired(cam_stream_type_t stream_ty
     int maxStreamBuf = zslQBuffers + minCircularBufNum +
         mParameters.getNumOfExtraHDRInBufsIfNeeded() -
         mParameters.getNumOfExtraHDROutBufsIfNeeded() +
-        mParameters.getNumOfExtraBuffersForImageProc();
+        mParameters.getNumOfExtraBuffersForImageProc() +
+        EXTRA_ZSL_PREVIEW_STREAM_BUF;
 
     if (!isNoDisplayMode()) {
         if(mPreviewWindow != NULL) {
