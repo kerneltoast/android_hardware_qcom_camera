@@ -943,7 +943,9 @@ int32_t QCameraReprocessChannel::addReprocStreamsFromSource(QCameraAllocator& al
                 }
             }
 
-            if (streamInfo->reprocess_config.pp_feature_config.feature_mask & CAM_QCOM_FEATURE_ROTATION) {
+            uint32_t mask;
+            mask = streamInfo->reprocess_config.pp_feature_config.feature_mask;
+            if (mask & CAM_QCOM_FEATURE_CPP) {
                 if (streamInfo->reprocess_config.pp_feature_config.rotation == ROTATE_90 ||
                     streamInfo->reprocess_config.pp_feature_config.rotation == ROTATE_270) {
                     // rotated by 90 or 270, need to switch width and height
@@ -953,9 +955,9 @@ int32_t QCameraReprocessChannel::addReprocStreamsFromSource(QCameraAllocator& al
                 }
             }
 
-            if (param.isZSLMode() &&
-                (streamInfo->reprocess_config.online.input_stream_type == CAM_STREAM_TYPE_SNAPSHOT)) {
-                // ZSL mode snapshot need reprocess to do the flip
+            cam_stream_type_t type = CAM_STREAM_TYPE_DEFAULT;
+            type = streamInfo->reprocess_config.online.input_stream_type;
+            if (type == CAM_STREAM_TYPE_SNAPSHOT) {
                 int flipMode =
                     param.getFlipMode(streamInfo->reprocess_config.online.input_stream_type);
                 if (flipMode > 0) {
@@ -964,11 +966,11 @@ int32_t QCameraReprocessChannel::addReprocStreamsFromSource(QCameraAllocator& al
                 }
             }
 
-            if(streamInfo->reprocess_config.pp_feature_config.feature_mask & CAM_QCOM_FEATURE_SCALE){
+            if (mask & CAM_QCOM_FEATURE_SCALE) {
                 //we only Scale Snapshot frame
                 if(pStream->isTypeOf(CAM_STREAM_TYPE_SNAPSHOT)){
                     //also check whether rotation is needed
-                    if((streamInfo->reprocess_config.pp_feature_config.feature_mask & CAM_QCOM_FEATURE_ROTATION) &&
+                    if((mask & CAM_QCOM_FEATURE_CPP) &&
                        (streamInfo->reprocess_config.pp_feature_config.rotation == ROTATE_90 ||
                         streamInfo->reprocess_config.pp_feature_config.rotation == ROTATE_270)){
                         //need swap
