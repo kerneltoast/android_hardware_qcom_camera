@@ -36,6 +36,8 @@
 #include <poll.h>
 #include <linux/media.h>
 #include <signal.h>
+#include <cutils/properties.h>
+#include <stdlib.h>
 #include <media/msm_cam_sensor.h>
 
 #include "mm_camera_dbg.h"
@@ -49,6 +51,7 @@ static mm_camera_ctrl_t g_cam_ctrl = {0, {{0}}, {0}, {{0}}};
 
 static pthread_mutex_t g_handler_lock = PTHREAD_MUTEX_INITIALIZER;
 static uint16_t g_handler_history_count = 0; /* history count for handler */
+volatile uint32_t gMmCameraIntfLogLevel = 0;
 
 /*===========================================================================
  * FUNCTION   : mm_camera_util_generate_handler
@@ -1320,6 +1323,10 @@ uint8_t get_num_of_cameras()
     char subdev_name[32];
     int32_t sd_fd = 0;
     struct sensor_init_cfg_data cfg;
+    char prop[PROPERTY_VALUE_MAX];
+
+    property_get("persist.camera.logs", prop, "1");
+    gMmCameraIntfLogLevel = atoi(prop);
 
     CDBG("%s : E", __func__);
     /* lock the mutex */
