@@ -33,6 +33,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <cutils/properties.h>
+#include <stdlib.h>
 
 #include "mm_jpeg_dbg.h"
 #include "mm_jpeg_interface.h"
@@ -43,6 +45,7 @@ static mm_jpeg_obj* g_jpeg_obj = NULL;
 
 static pthread_mutex_t g_handler_lock = PTHREAD_MUTEX_INITIALIZER;
 static uint16_t g_handler_history_count = 0; /* history count for handler */
+volatile uint32_t gMmCameraJpegLogLevel = 0;
 
 /** mm_jpeg_util_generate_handler:
  *
@@ -290,6 +293,11 @@ uint32_t jpeg_open(mm_jpeg_ops_t *ops, mm_dimension picture_size)
   int32_t rc = 0;
   uint32_t clnt_hdl = 0;
   mm_jpeg_obj* jpeg_obj = NULL;
+  char prop[PROPERTY_VALUE_MAX];
+
+  property_get("persist.camera.logs", prop, "1");
+  gMmCameraJpegLogLevel = atoi(prop);
+
 
   pthread_mutex_lock(&g_intf_lock);
   /* first time open */
