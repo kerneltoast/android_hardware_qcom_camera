@@ -196,6 +196,7 @@ public:
     static const char KEY_QC_WB_MANUAL_CCT[];
     static const char KEY_QC_MIN_WB_CCT[];
     static const char KEY_QC_MAX_WB_CCT[];
+    static const char KEY_QC_LONG_SHOT[];
 
     static const char KEY_QC_MANUAL_FOCUS_POSITION[];
     static const char KEY_QC_MANUAL_FOCUS_POS_TYPE[];
@@ -677,6 +678,7 @@ private:
     int32_t setCDSMode(const QCameraParameters& params);
     int32_t setMobicat(const QCameraParameters& params);
     bool UpdateHFRFrameRate(const QCameraParameters& params);
+    int32_t setLongshotParam(const QCameraParameters& params);
 
     int32_t setAutoExposure(const char *autoExp);
     int32_t setPreviewFpsRange(int min_fps,int max_fps,
@@ -796,6 +798,7 @@ private:
     bool m_bRecordingHint;          // local copy of recording hint
     bool m_bRecordingHint_new;
     bool m_bHistogramEnabled;       // if histogram is enabled
+    bool m_bLongshotEnabled;       // if longshot is enabled
     int  m_nFaceProcMask;           // face process mask
     bool m_bDebugFps;               // if FPS need to be logged
     cam_focus_mode_type mFocusMode;
