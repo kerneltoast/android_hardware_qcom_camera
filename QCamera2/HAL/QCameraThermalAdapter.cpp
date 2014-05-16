@@ -62,7 +62,7 @@ int QCameraThermalAdapter::init(QCameraThermalCallback *thermalCb)
     const char *error = NULL;
     int rc = NO_ERROR;
 
-    ALOGV("%s E", __func__);
+    CDBG("%s E", __func__);
     mHandle = dlopen("/vendor/lib/libthermalclient.so", RTLD_NOW);
     if (!mHandle) {
         error = dlerror();
@@ -105,7 +105,7 @@ int QCameraThermalAdapter::init(QCameraThermalCallback *thermalCb)
     }
 
     mCallback = thermalCb;
-    ALOGV("%s X", __func__);
+    CDBG("%s X", __func__);
     return rc;
 
 error3:
@@ -116,13 +116,13 @@ error2:
     dlclose(mHandle);
     mHandle = NULL;
 error:
-    ALOGV("%s X", __func__);
+    CDBG("%s X", __func__);
     return rc;
 }
 
 void QCameraThermalAdapter::deinit()
 {
-    ALOGV("%s E", __func__);
+    CDBG("%s E", __func__);
     if (mUnregister) {
         if (mCameraHandle) {
             mUnregister(mCameraHandle);
@@ -140,7 +140,7 @@ void QCameraThermalAdapter::deinit()
     mRegister = NULL;
     mUnregister = NULL;
     mCallback = NULL;
-    ALOGV("%s X", __func__);
+    CDBG("%s X", __func__);
 }
 
 char QCameraThermalAdapter::mStrCamera[] = "camera";
@@ -150,12 +150,12 @@ int QCameraThermalAdapter::thermalCallback(int level,
                 void *userdata, void *data)
 {
     int rc = 0;
-    ALOGV("%s E", __func__);
+    CDBG("%s E", __func__);
     QCameraThermalAdapter& instance = getInstance();
     qcamera_thermal_level_enum_t lvl = (qcamera_thermal_level_enum_t) level;
     if (instance.mCallback)
         rc = instance.mCallback->thermalEvtHandle(lvl, userdata, data);
-    ALOGV("%s X", __func__);
+    CDBG("%s X", __func__);
     return rc;
 }
 
