@@ -270,6 +270,12 @@ public:
     static const char KEY_QC_OPTI_ZOOM[];
     static const char KEY_QC_SUPPORTED_OPTI_ZOOM_MODES[];
 
+    //Longshot
+    static const char KEY_QC_LONGSHOT_SUPPORTED[];
+
+    //ZSL+HDR
+    static const char KEY_QC_ZSL_HDR_SUPPORTED[];
+
     // Values for Touch AF/AEC
     static const char TOUCH_AF_AEC_OFF[];
     static const char TOUCH_AF_AEC_ON[];
