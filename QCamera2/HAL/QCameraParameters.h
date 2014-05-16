@@ -596,6 +596,7 @@ public:
     int32_t set3ALock(const char *lockStr);
     int32_t setAndCommitZoom(int zoom_level);
     uint8_t getBurstCountForAdvancedCapture();
+    int32_t setLongshotEnable(bool enable);
     inline bool isUbiRefocus() {return isUbiFocusEnabled() &&
         (m_pCapability->ubifocus_af_bracketing_need.output_count > 1);};
     inline uint32_t UfOutputCount() {
