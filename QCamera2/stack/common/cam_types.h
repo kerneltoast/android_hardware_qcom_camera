@@ -1416,6 +1416,11 @@ typedef struct {
 #define CAM_QCOM_FEATURE_CHROMA_FLASH   (1<<13)
 #define CAM_QCOM_FEATURE_OPTIZOOM       (1<<14)
 
+// Debug mask
+#define HAL_DEBUG_MASK_HAL                 (1<<0)
+#define HAL_DEBUG_MASK_MM_CAMERA_INTERFACE (1<<1)
+#define HAL_DEBUG_MASK_MM_JPEG_INTERFACE   (1<<2)
+
 // Counter clock wise
 typedef enum {
     ROTATE_0 = 1<<0,

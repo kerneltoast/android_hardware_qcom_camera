@@ -294,10 +294,26 @@ uint32_t jpeg_open(mm_jpeg_ops_t *ops, mm_dimension picture_size)
   uint32_t clnt_hdl = 0;
   mm_jpeg_obj* jpeg_obj = NULL;
   char prop[PROPERTY_VALUE_MAX];
+  uint32_t temp;
+  uint32_t log_level;
+  uint32_t debug_mask;
+  memset(prop, 0, sizeof(prop));
 
-  property_get("persist.camera.logs", prop, "1");
-  gMmCameraJpegLogLevel = atoi(prop);
+  /*  Higher 4 bits : Value of Debug log level (Default level is 1 to print all CDBG_HIGH)
+      Lower 28 bits : Control mode for sub module logging(Only 3 sub modules in HAL)
+                      0x1 for HAL
+                      0x10 for mm-camera-interface
+                      0x100 for mm-jpeg-interface  */
+  property_get("persist.camera.hal.debug.mask", prop, "268435463"); // 0x10000007=268435463
+  temp = atoi(prop);
+  log_level = ((temp >> 28) & 0xF);
+  debug_mask = (temp & HAL_DEBUG_MASK_MM_JPEG_INTERFACE);
+  if (debug_mask > 0)
+      gMmCameraJpegLogLevel = log_level;
+  else
+      gMmCameraJpegLogLevel = 0; // Debug logs are not required if debug_mask is zero
 
+  CDBG_HIGH("%s gMmCameraJpegLogLevel=%d",__func__, gMmCameraJpegLogLevel);
 
   pthread_mutex_lock(&g_intf_lock);
   /* first time open */

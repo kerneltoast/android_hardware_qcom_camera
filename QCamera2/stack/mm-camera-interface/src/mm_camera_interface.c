@@ -1394,11 +1394,26 @@ uint8_t get_num_of_cameras()
     int32_t sd_fd = 0;
     struct sensor_init_cfg_data cfg;
     char prop[PROPERTY_VALUE_MAX];
+    uint32_t temp;
+    uint32_t log_level;
+    uint32_t debug_mask;
 
-    property_get("persist.camera.logs", prop, "1");
-    gMmCameraIntfLogLevel = atoi(prop);
+    /*  Higher 4 bits : Value of Debug log level (Default level is 1 to print all CDBG_HIGH)
+        Lower 28 bits : Control mode for sub module logging(Only 3 sub modules in HAL)
+                        0x1 for HAL
+                        0x10 for mm-camera-interface
+                        0x100 for mm-jpeg-interface  */
+    property_get("persist.camera.hal.debug.mask", prop, "268435463"); // 0x10000007=268435463
+    temp = atoi(prop);
+    log_level = ((temp >> 28) & 0xF);
+    debug_mask = (temp & HAL_DEBUG_MASK_MM_CAMERA_INTERFACE);
+    if (debug_mask > 0)
+        gMmCameraIntfLogLevel = log_level;
+    else
+        gMmCameraIntfLogLevel = 0; // Debug logs are not required if debug_mask is zero
 
-    CDBG("%s : E", __func__);
+    CDBG_HIGH("%s gMmCameraIntfLogLevel=%d",__func__, gMmCameraIntfLogLevel);
+
     /* lock the mutex */
     pthread_mutex_lock(&g_intf_lock);
 
