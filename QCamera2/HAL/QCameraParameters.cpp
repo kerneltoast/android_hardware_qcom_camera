@@ -2303,6 +2303,34 @@ int32_t QCameraParameters::setAntibanding(const QCameraParameters& params)
 }
 
 /*===========================================================================
+ * FUNCTION   : setAlgoOptimizationsMask
+ *
+ * DESCRIPTION: get the value from persist file in Stats module that will
+ *              control funtionality in the module
+ *
+ * PARAMETERS : none
+ *
+ * RETURN     : int32_t type of status
+ *              NO_ERROR  -- success
+ *              none-zero failure code
+ *==========================================================================*/
+int32_t QCameraParameters::setAlgoOptimizationsMask()
+{
+    uint32_t mask = 0;
+    char value[PROPERTY_VALUE_MAX];
+
+    property_get("persist.camera.stats.opt.mask", value, "0");
+    mask = (uint32_t)atoi(value);
+
+    ALOGV("%s: algo opt ctrl mask :%d", __func__, mask);
+
+    return AddSetParmEntryToBatch(m_pParamBuf,
+                                  CAM_INTF_PARM_ALGO_OPTIMIZATIONS_MASK,
+                                  sizeof(mask),
+                                  &mask);
+}
+
+/*===========================================================================
  * FUNCTION   : setStatsDebugMask
  *
  * DESCRIPTION: get the value from persist file in Stats module that will
@@ -3753,6 +3781,7 @@ int32_t QCameraParameters::updateParameters(QCameraParameters& params,
     if ((rc = setLiveSnapshotSize(params)))             final_rc = rc;
     if ((rc = setJpegThumbnailSize(params)))            final_rc = rc;
     if ((rc = setStatsDebugMask()))                     final_rc = rc;
+    if ((rc = setAlgoOptimizationsMask()))              final_rc = rc;
     if ((rc = setMobicat(params)))                      final_rc = rc;
     if ((rc = setAFBracket(params)))                    final_rc = rc;
     if ((rc = setChromaFlash(params)))                  final_rc = rc;

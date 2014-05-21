@@ -674,6 +674,7 @@ private:
     int32_t setBurstNum(const QCameraParameters& params);
     int32_t setSnapshotFDReq(const QCameraParameters& );
     int32_t setStatsDebugMask();
+    int32_t setAlgoOptimizationsMask();
     int32_t setTintlessValue(const QCameraParameters& params);
     int32_t setCDSMode(const QCameraParameters& params);
     int32_t setMobicat(const QCameraParameters& params);
