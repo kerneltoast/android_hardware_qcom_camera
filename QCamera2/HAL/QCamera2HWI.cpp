@@ -1002,6 +1002,7 @@ QCamera2HardwareInterface::QCamera2HardwareInterface(int cameraId)
       mCaptureRotation(0),
       mIs3ALocked(false),
       mZoomLevel(0),
+      m_bIntEvtPending(false),
       mSnapshotJob(-1),
       mPostviewJob(-1),
       mMetadataJob(-1),
