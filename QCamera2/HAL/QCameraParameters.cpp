@@ -131,6 +131,7 @@ const char QCameraParameters::KEY_QC_WB_MANUAL_CCT[] = "wb-manual-cct";
 const char QCameraParameters::KEY_QC_MIN_WB_CCT[] = "min-wb-cct";
 const char QCameraParameters::KEY_QC_MAX_WB_CCT[] = "max-wb-cct";
 const char QCameraParameters::KEY_INTERNAL_PERVIEW_RESTART[] = "internal-restart";
+const char QCameraParameters::KEY_QC_LONG_SHOT[] = "long-shot";
 
 // Values for effect settings.
 const char QCameraParameters::EFFECT_EMBOSS[] = "emboss";
@@ -621,6 +622,7 @@ QCameraParameters::QCameraParameters()
       m_bRecordingHint(false),
       m_bRecordingHint_new(false),
       m_bHistogramEnabled(false),
+      m_bLongshotEnabled(false),
       m_nFaceProcMask(0),
       m_bDebugFps(false),
       mFocusMode(CAM_FOCUS_MODE_MAX),
@@ -702,6 +704,7 @@ QCameraParameters::QCameraParameters(const String8 &params)
     m_bRecordingHint(false),
     m_bRecordingHint_new(false),
     m_bHistogramEnabled(false),
+    m_bLongshotEnabled(false),
     m_nFaceProcMask(0),
     m_bDebugFps(false),
     mFocusMode(CAM_FOCUS_MODE_MAX),
@@ -3630,6 +3633,40 @@ int32_t QCameraParameters::setMobicat(const QCameraParameters& )
 }
 
 /*===========================================================================
+ * FUNCTION   : setLongshotParam
+ *
+ * DESCRIPTION: set Longshot on/off.
+ *
+ * PARAMETERS :
+ *   @params  : user setting parameters
+ *
+ * RETURN     : int32_t type of status
+ *              NO_ERROR  -- success
+ *              none-zero failure code
+ *==========================================================================*/
+int32_t QCameraParameters::setLongshotParam(const QCameraParameters& params)
+{
+    const char *str = params.get(KEY_QC_LONG_SHOT);
+    const char *prev_str = get(KEY_QC_LONG_SHOT);
+
+    if (str != NULL) {
+        if (prev_str == NULL || strcmp(str, prev_str) != 0) {
+            set(KEY_QC_LONG_SHOT, str);
+            if (!strcmp(str, "off")) {
+                if (m_bLongshotEnabled == true) {
+                    // We restart here, to reset the FPS and no
+                    // of buffers as per the requirement of single snapshot usecase.
+                    m_bNeedRestart = true;
+                }
+                m_bLongshotEnabled = false;
+            }
+        }
+    }
+
+    return NO_ERROR;
+}
+
+/*===========================================================================
  * FUNCTION   : updateParameters
  *
  * DESCRIPTION: update parameters from user setting
@@ -3720,6 +3757,7 @@ int32_t QCameraParameters::updateParameters(QCameraParameters& params,
     if ((rc = setAFBracket(params)))                    final_rc = rc;
     if ((rc = setChromaFlash(params)))                  final_rc = rc;
     if ((rc = setOptiZoom(params)))                     final_rc = rc;
+    if ((rc = setLongshotParam(params)))                final_rc = rc;
 
 UPDATE_PARAM_DONE:
     needRestart = m_bNeedRestart;
@@ -4315,6 +4353,9 @@ int32_t QCameraParameters::initDefaultParameters()
 
     // Add support for internal preview restart
     set(KEY_INTERNAL_PERVIEW_RESTART, VALUE_TRUE);
+
+    // Set default longshot mode
+    set(KEY_QC_LONG_SHOT, "off");
 
     int32_t rc = commitParameters();
     if (rc == NO_ERROR) {
@@ -5292,6 +5333,8 @@ int32_t QCameraParameters::setLongshotEnable(bool enable)
         ALOGE("%s:Failed to parameter changes", __func__);
         return rc;
     }
+
+    if (enable == true) m_bLongshotEnabled = enable;
 
     return rc;
 }
