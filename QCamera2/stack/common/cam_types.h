@@ -247,6 +247,7 @@ typedef enum {
     /* generic 8-bit raw */
     CAM_FORMAT_JPEG_RAW_8BIT,
     CAM_FORMAT_META_RAW_8BIT,
+    CAM_FORMAT_META_RAW_10BIT,
 
     CAM_FORMAT_MAX
 } cam_format_t;
