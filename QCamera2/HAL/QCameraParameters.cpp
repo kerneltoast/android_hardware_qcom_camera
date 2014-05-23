@@ -6900,10 +6900,15 @@ int32_t QCameraParameters::getStreamFormat(cam_stream_type_t streamType,
         if (mPictureFormat >= CAM_FORMAT_YUV_RAW_8BIT_YUYV) {
             format = (cam_format_t)mPictureFormat;
         } else {
-            format = CAM_FORMAT_BAYER_QCOM_RAW_10BPP_GBRG;
-            ALOGE("%s: Raw stream format %d bundled with snapshot",
-                   __func__,
-                   format);
+            char raw_format[PROPERTY_VALUE_MAX];
+            int rawFormat;
+            memset(raw_format, 0, sizeof(raw_format));
+            /*Default value is CAM_FORMAT_BAYER_QCOM_RAW_10BPP_GBRG*/
+            property_get("persist.camera.raw.format", raw_format, "16");
+            rawFormat = atoi(raw_format);
+            format = (cam_format_t)rawFormat;
+            CDBG_HIGH("%s: Raw stream format %d bundled with snapshot",
+                   __func__, format);
         }
         break;
     case CAM_STREAM_TYPE_METADATA:
