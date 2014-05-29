@@ -5929,8 +5929,7 @@ bool QCamera2HardwareInterface::needRotationReprocess()
     uint32_t feature_mask = 0;
     feature_mask = gCamCapability[mCameraId]->qcom_supported_feature_mask;
     if (((feature_mask & CAM_QCOM_FEATURE_CPP) > 0) &&
-        (getJpegRotation() > 0) &&
-        (mParameters.getRecordingHintValue() == false)) {
+        (getJpegRotation() > 0)) {
         // current rotation is not zero
         // and pp has the capability to process rotation
         CDBG_HIGH("%s: need to do reprocess for rotation=%d",
