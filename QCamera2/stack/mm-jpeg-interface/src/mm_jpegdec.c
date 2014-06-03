@@ -945,7 +945,10 @@ int32_t mm_jpegdec_destroy_session(mm_jpeg_obj *my_obj,
 int32_t mm_jpegdec_destroy_session_by_id(mm_jpeg_obj *my_obj, uint32_t session_id)
 {
   mm_jpeg_job_session_t *p_session = mm_jpeg_get_session(my_obj, session_id);
-
+  if (p_session == NULL) {
+      CDBG_ERROR("%s: error: mm_jpeg_get_session returned NULL",__func__);
+      return -1;
+  }
   return mm_jpegdec_destroy_session(my_obj, p_session);
 }
 

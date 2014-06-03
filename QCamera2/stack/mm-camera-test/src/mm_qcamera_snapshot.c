@@ -193,6 +193,10 @@ static void mm_app_snapshot_metadata_notify_cb(mm_camera_super_buf_t *bufs,
       break;
     }
   }
+  if (NULL == channel) {
+      CDBG_ERROR("%s: Wrong channel id", __func__);
+      return;
+  }
   /* find preview stream */
   for (i = 0; i < channel->num_streams; i++) {
     if (channel->streams[i].s_config.stream_info->stream_type == CAM_STREAM_TYPE_METADATA) {
@@ -200,6 +204,11 @@ static void mm_app_snapshot_metadata_notify_cb(mm_camera_super_buf_t *bufs,
       break;
     }
   }
+  if (NULL == p_stream) {
+      CDBG_ERROR("%s: Wrong preview stream", __func__);
+      return;
+  }
+
   /* find preview frame */
   for (i = 0; i < bufs->num_bufs; i++) {
     if (bufs->bufs[i]->stream_id == p_stream->s_id) {

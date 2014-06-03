@@ -161,9 +161,9 @@ extern "C" int  camera_device_open(
                 goto EXIT;
             }
         }
+        /* pass actual hw_device ptr to framework. This amkes that we actally be use memberof() macro */
+        *hw_device = (hw_device_t*)&device->common;
     }
-    /* pass actual hw_device ptr to framework. This amkes that we actally be use memberof() macro */
-    *hw_device = (hw_device_t*)&device->common;
 
 EXIT:
 

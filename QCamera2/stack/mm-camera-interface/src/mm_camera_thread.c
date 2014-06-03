@@ -272,7 +272,10 @@ static void mm_camera_poll_proc_pipe(mm_camera_poll_thread_t *poll_cb)
 static void *mm_camera_poll_fn(mm_camera_poll_thread_t *poll_cb)
 {
     int rc = 0, i;
-
+    if (poll_cb == NULL) {
+        CDBG_ERROR("%s: error: poll_cb=%p",__func__,poll_cb);
+        return NULL;
+    }
     CDBG("%s: poll type = %d, num_fd = %d poll_cb = %p\n",
          __func__, poll_cb->poll_type, poll_cb->num_fds,poll_cb);
     do {
