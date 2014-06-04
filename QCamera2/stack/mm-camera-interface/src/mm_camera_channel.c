@@ -1876,6 +1876,9 @@ int32_t mm_channel_handle_metadata(
     uint8_t is_crop_1x_found = 0;
     uint32_t snapshot_stream_id = 0;
     uint32_t i;
+    /* Set expected frame id to a future frame idx, large enough to wait
+    * for good_frame_idx_range, and small enough to still capture an image */
+    const int max_future_frame_offset = 100;
 
     stream_obj = mm_channel_util_get_stream_by_handler(ch_obj,
                 buf_info->stream_id);
@@ -1937,7 +1940,7 @@ int32_t mm_channel_handle_metadata(
                 ch_obj->isZoom1xFrameRequested = 0;
                 queue->expected_frame_id = buf_info->frame_idx + 1;
             } else {
-                queue->expected_frame_id += 100;
+                queue->expected_frame_id += max_future_frame_offset;
                 /* Flush unwanted frames */
                 mm_channel_superbuf_flush_matched(ch_obj, queue);
             }
@@ -1946,9 +1949,6 @@ int32_t mm_channel_handle_metadata(
 
         if (metadata->is_prep_snapshot_done_valid) {
             if (metadata->prep_snapshot_done_state == NEED_FUTURE_FRAME) {
-                /* Set expected frame id to a future frame idx, large enough to wait
-                 * for good_frame_idx_range, and small enough to still capture an image */
-                const int max_future_frame_offset = 100;
                 queue->expected_frame_id += max_future_frame_offset;
 
                 mm_channel_superbuf_flush(ch_obj,
@@ -1967,10 +1967,11 @@ int32_t mm_channel_handle_metadata(
             }
             queue->expected_frame_id =
                 metadata->good_frame_idx_range.min_frame_idx;
-        } else if(ch_obj->need3ABracketing &&
+        } else if (ch_obj->need3ABracketing &&
                    !metadata->is_good_frame_idx_range_valid) {
                /* Flush unwanted frames */
                mm_channel_superbuf_flush_matched(ch_obj, queue);
+               queue->expected_frame_id += max_future_frame_offset;
         }
         if (ch_obj->isFlashBracketingEnabled &&
             metadata->is_good_frame_idx_range_valid) {
