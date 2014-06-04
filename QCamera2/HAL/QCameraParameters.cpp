@@ -660,7 +660,10 @@ QCameraParameters::QCameraParameters()
       m_bOptiZoomOn(false),
       m_bHfrMode(false),
       mHfrMode(CAM_HFR_MODE_OFF),
-      m_bDisplayFrame(true)
+      m_bDisplayFrame(true),
+      m_bAeBracketingEnabled(false),
+      mFlashValue(CAM_FLASH_MODE_OFF),
+      mFlashDaemonValue(CAM_FLASH_MODE_OFF)
 {
     char value[PROPERTY_VALUE_MAX];
     // TODO: may move to parameter instead of sysprop
@@ -736,7 +739,10 @@ QCameraParameters::QCameraParameters(const String8 &params)
     m_bChromaFlashOn(false),
     m_bOptiZoomOn(false),
     m_bHfrMode(false),
-    mHfrMode(CAM_HFR_MODE_OFF)
+    mHfrMode(CAM_HFR_MODE_OFF),
+    m_bAeBracketingEnabled(false),
+    mFlashValue(CAM_FLASH_MODE_OFF),
+    mFlashDaemonValue(CAM_FLASH_MODE_OFF)
 {
     memset(&m_LiveSnapshotSize, 0, sizeof(m_LiveSnapshotSize));
     m_pTorch = NULL;
@@ -2946,8 +2952,6 @@ int32_t QCameraParameters::setSceneMode(const QCameraParameters& params)
                 m_bHDREnabled = false;
             }
 
-            enableFlash(!m_bHDREnabled, false);
-
             if ((m_bHDREnabled) ||
                 ((prev_str != NULL) && (strcmp(prev_str, SCENE_MODE_HDR) == 0))) {
                 CDBG_HIGH("%s: scene mode changed between HDR and non-HDR, need restart", __func__);
@@ -3819,6 +3823,8 @@ int32_t QCameraParameters::updateParameters(QCameraParameters& params,
     if ((rc = setChromaFlash(params)))                  final_rc = rc;
     if ((rc = setOptiZoom(params)))                     final_rc = rc;
     if ((rc = setLongshotParam(params)))                final_rc = rc;
+
+    if ((rc = updateFlash(false)))                      final_rc = rc;
 
 UPDATE_PARAM_DONE:
     needRestart = m_bNeedRestart;
@@ -5417,7 +5423,7 @@ int32_t QCameraParameters::setLongshotEnable(bool enable)
 /*===========================================================================
  * FUNCTION   : setFlash
  *
- * DESCRIPTION: set f;ash mode
+ * DESCRIPTION: set flash mode
  *
  * PARAMETERS :
  *   @flashStr : LED flash mode value string
@@ -5444,17 +5450,8 @@ int32_t QCameraParameters::setFlash(const char *flashStr)
             }
 
             updateParamEntry(KEY_FLASH_MODE, flashStr);
-
-            // If hdr or Chrommma Flash are enabled,
-            // flash mode just need to be stored
-            if (isHDREnabled() || isChromaFlashEnabled()) {
-              return NO_ERROR;
-            }
-
-            return AddSetParmEntryToBatch(m_pParamBuf,
-                                          CAM_INTF_PARM_LED_MODE,
-                                          sizeof(value),
-                                          &value);
+            mFlashValue = value;
+            return NO_ERROR;
         }
     }
     ALOGE("Invalid flash value: %s", (flashStr == NULL) ? "NULL" : flashStr);
@@ -6191,6 +6188,7 @@ int32_t QCameraParameters::setAEBracket(const char *aecBracketStr)
             const char *str_val = get(KEY_QC_CAPTURE_BURST_EXPOSURE);
             if ((str_val != NULL) && (strlen(str_val)>0)) {
                 expBracket.mode = CAM_EXP_BRACKETING_ON;
+                m_bAeBracketingEnabled = true;
                 strlcpy(expBracket.values, str_val, MAX_EXP_BRACKETING_LENGTH);
                 CDBG("%s: setting Exposure Bracketing value of %s",
                       __func__, expBracket.values);
@@ -6198,6 +6196,7 @@ int32_t QCameraParameters::setAEBracket(const char *aecBracketStr)
             else {
                 /* Apps not set capture-burst-exposures, error case fall into bracketing off mode */
                 CDBG("%s: capture-burst-exposures not set, back to HDR OFF mode", __func__);
+                m_bAeBracketingEnabled = false;
                 expBracket.mode = CAM_EXP_BRACKETING_OFF;
             }
         }
@@ -6205,12 +6204,11 @@ int32_t QCameraParameters::setAEBracket(const char *aecBracketStr)
     default:
         {
             CDBG_HIGH("%s, EXP_BRACKETING_OFF", __func__);
+            m_bAeBracketingEnabled = false;
             expBracket.mode = CAM_EXP_BRACKETING_OFF;
         }
         break;
     }
-
-    enableFlash(CAM_EXP_BRACKETING_OFF == expBracket.mode, false);
 
     // Cache client AE bracketing configuration
     memcpy(&m_AEBracketingClient, &expBracket, sizeof(cam_exp_bracketing_t));
@@ -6479,7 +6477,7 @@ int32_t QCameraParameters::setAFBracket(const char *afBracketStr)
         if (value != NAME_NOT_FOUND) {
             m_bAFBracketingOn = (value != 0);
             updateParamEntry(KEY_QC_AF_BRACKET, afBracketStr);
-            enableFlash(!m_bAFBracketingOn, false);
+
             return NO_ERROR;
         }
     }
@@ -6511,16 +6509,8 @@ int32_t QCameraParameters::setChromaFlash(const char *chromaFlashStr)
         if(value != NAME_NOT_FOUND) {
             m_bChromaFlashOn = (value != 0);
             updateParamEntry(KEY_QC_CHROMA_FLASH, chromaFlashStr);
-            //set flash value.
-            if (m_bChromaFlashOn) {
-                value = CAM_FLASH_MODE_ON;
-                return AddSetParmEntryToBatch(m_pParamBuf,
-                                   CAM_INTF_PARM_LED_MODE,
-                                   sizeof(value),
-                                   &value);
-            } else {
-                return enableFlash(true, false);
-            }
+
+            return NO_ERROR;
         }
     }
 
@@ -6551,7 +6541,7 @@ int32_t QCameraParameters::setOptiZoom(const char *optiZoomStr)
         if(value != NAME_NOT_FOUND) {
             m_bOptiZoomOn = (value != 0);
             updateParamEntry(KEY_QC_OPTI_ZOOM, optiZoomStr);
-            enableFlash(!m_bOptiZoomOn, false);
+
             return NO_ERROR;
         }
     }
@@ -6656,21 +6646,21 @@ int32_t QCameraParameters::stopAEBracket()
 }
 
 /*===========================================================================
- * FUNCTION   : enableFlash
+ * FUNCTION   : updateFlash
  *
  * DESCRIPTION: restores client flash configuration or disables flash
  *
  * PARAMETERS :
- *   @enableFlash : enable flash
  *   @commitSettings : flag indicating whether settings need to be commited
  *
  * RETURN     : int32_t type of status
  *              NO_ERROR  -- success
  *              none-zero failure code
  *==========================================================================*/
-int32_t QCameraParameters::enableFlash(bool enableFlash, bool commitSettings)
+int32_t QCameraParameters::updateFlash(bool commitSettings)
 {
     int32_t rc = NO_ERROR;
+    int32_t value;
 
     if (commitSettings) {
       if(initBatchUpdate(m_pParamBuf) < 0 ) {
@@ -6679,31 +6669,31 @@ int32_t QCameraParameters::enableFlash(bool enableFlash, bool commitSettings)
       }
     }
 
-    const char *str = get(KEY_FLASH_MODE);
-
-    if (!enableFlash) {
-        str = FLASH_MODE_OFF;
+    if (isHDREnabled() || m_bAeBracketingEnabled || m_bAFBracketingOn ||
+          m_bOptiZoomOn) {
+        value = CAM_FLASH_MODE_OFF;
+    } else if (m_bChromaFlashOn) {
+        value = CAM_FLASH_MODE_ON;
+    } else {
+        value = mFlashValue;
     }
 
-    int32_t value = lookupAttr(FLASH_MODES_MAP,
-        sizeof(FLASH_MODES_MAP)/sizeof(QCameraMap),
-        str);
+    if (value != mFlashDaemonValue) {
 
-    if (value != NAME_NOT_FOUND) {
-        CDBG("%s: Setting Flash value %s", __func__, str);
-
+        ALOGV("%s: Setting Flash value %d", __func__, value);
         rc = AddSetParmEntryToBatch(m_pParamBuf,
                                       CAM_INTF_PARM_LED_MODE,
                                       sizeof(value),
                                       &value);
         if (rc != NO_ERROR) {
-          rc = BAD_VALUE;
-          ALOGE("%s:Failed to set led mode", __func__);
-          return rc;
+            rc = BAD_VALUE;
+            ALOGE("%s:Failed to set led mode", __func__);
+            return rc;
         }
+
+        mFlashDaemonValue = value;
     } else {
-        ALOGE("%s:Wrong saved led mode", __func__);
-        return rc;
+        rc = NO_ERROR;
     }
 
     if (commitSettings) {
@@ -8217,7 +8207,7 @@ void QCameraParameters::setHDRSceneEnable(bool bflag)
     m_HDRSceneEnabled = bflag;
 
     if (bupdate) {
-        enableFlash(!isHDREnabled(), true);
+        updateFlash(true);
     }
 }
 
