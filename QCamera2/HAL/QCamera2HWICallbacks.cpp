@@ -1330,7 +1330,9 @@ void QCamera2HardwareInterface::dumpJpegToFile(const void *data,
                 } else {
                     ALOGE("%s: fail t open file for image dumping", __func__);
                 }
-                mDumpFrmCnt++;
+                if (false == m_bIntEvtPending) {
+                    mDumpFrmCnt++;
+                }
             }
         }
         mDumpSkipCnt++;
