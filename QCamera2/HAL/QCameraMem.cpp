@@ -366,7 +366,7 @@ int QCameraMemory::allocOneBuffer(QCameraMemInfo &memInfo,
     memInfo.heap_id = heap_id;
 
     CDBG_HIGH("%s : ION buffer %lx with size %d allocated",
-            __func__, (unsigned long)memInfo.handle, size);
+            __func__, (unsigned long)memInfo.handle, memInfo.size);
     return OK;
 
 ION_MAP_FAILED:

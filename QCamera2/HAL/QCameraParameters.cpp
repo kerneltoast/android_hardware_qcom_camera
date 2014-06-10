@@ -1628,7 +1628,7 @@ int32_t QCameraParameters::setPreviewFpsRange(const QCameraParameters& params)
         rc = setHighFrameRate(mHfrMode);
         if(rc !=  NO_ERROR) goto end;
     }
-    CDBG_HIGH("%s: UpdateHFRFrameRate %d", __func__, updateNeeded);
+    CDBG("%s: UpdateHFRFrameRate %d", __func__, updateNeeded);
 
     vidMinFps = m_hfrFpsRange.video_min_fps;
     vidMaxFps = m_hfrFpsRange.video_max_fps;
@@ -1639,7 +1639,7 @@ int32_t QCameraParameters::setPreviewFpsRange(const QCameraParameters& params)
             maxFps = params.getPreviewFrameRate() * 1000;
             m_bFixedFrameRateSet = false;
         } else if (!updateNeeded) {
-            ALOGE("%s: No change in FpsRange", __func__);
+            CDBG("%s: No change in FpsRange", __func__);
             rc = NO_ERROR;
             goto end;
         }
@@ -1701,9 +1701,9 @@ bool QCameraParameters::UpdateHFRFrameRate(const QCameraParameters& params)
     int prevMinFps, prevMaxFps;
     CameraParameters::getPreviewFpsRange(&prevMinFps, &prevMaxFps);
     params.getPreviewFpsRange(&parm_minfps, &parm_maxfps);
-    CDBG_HIGH("%s: CameraParameters - : minFps = %d, maxFps = %d ",
+    CDBG("%s: CameraParameters - : minFps = %d, maxFps = %d ",
                 __func__, prevMinFps, prevMaxFps);
-    CDBG_HIGH("%s: Requested params - : minFps = %d, maxFps = %d ",
+    CDBG("%s: Requested params - : minFps = %d, maxFps = %d ",
                 __func__, parm_minfps, parm_maxfps);
 
     const char *hfrStr = params.get(KEY_QC_VIDEO_HIGH_FRAME_RATE);
@@ -1735,7 +1735,7 @@ bool QCameraParameters::UpdateHFRFrameRate(const QCameraParameters& params)
                                hsrStr);
         if(NAME_NOT_FOUND != hfrMode) newHfrMode = hfrMode;
     }
-    CDBG_HIGH("%s: prevHfrMode - %d, currentHfrMode = %d ",
+    CDBG("%s: prevHfrMode - %d, currentHfrMode = %d ",
                 __func__, mHfrMode, newHfrMode);
 
     if (mHfrMode != newHfrMode) {
@@ -3072,7 +3072,7 @@ int32_t QCameraParameters::setAFBracket(const QCameraParameters& params)
 {
     if ((m_pCapability->qcom_supported_feature_mask &
         CAM_QCOM_FEATURE_UBIFOCUS) == 0){
-        CDBG_HIGH("%s: AF Bracketing is not supported",__func__);
+        CDBG("%s: AF Bracketing is not supported",__func__);
         return NO_ERROR;
     }
     const char *str = params.get(KEY_QC_AF_BRACKET);
@@ -3104,7 +3104,7 @@ int32_t QCameraParameters::setChromaFlash(const QCameraParameters& params)
 {
     if ((m_pCapability->qcom_supported_feature_mask &
         CAM_QCOM_FEATURE_CHROMA_FLASH) == 0) {
-        CDBG_HIGH("%s: Chroma Flash is not supported",__func__);
+        CDBG("%s: Chroma Flash is not supported",__func__);
         return NO_ERROR;
     }
     const char *str = params.get(KEY_QC_CHROMA_FLASH);
@@ -3136,7 +3136,7 @@ int32_t QCameraParameters::setOptiZoom(const QCameraParameters& params)
 {
     if ((m_pCapability->qcom_supported_feature_mask &
         CAM_QCOM_FEATURE_OPTIZOOM) == 0){
-        CDBG_HIGH("%s: Opti Zoom is not supported",__func__);
+        CDBG("%s: Opti Zoom is not supported",__func__);
         return NO_ERROR;
     }
     const char *str = params.get(KEY_QC_OPTI_ZOOM);
@@ -8083,7 +8083,7 @@ int32_t QCameraParameters::setFaceDetection(bool enabled)
         return rc;
     }
 
-    CDBG_HIGH("%s: FaceProcMask -> %d", __func__, m_nFaceProcMask);
+    CDBG("%s: FaceProcMask -> %d", __func__, m_nFaceProcMask);
 
     return rc;
 }
@@ -8468,7 +8468,7 @@ int32_t QCameraParameters::initBatchUpdate(void *p_table)
 {
 
     m_tempMap.clear();
-    CDBG_HIGH("%s:Initializing batch parameter set",__func__);
+    CDBG("%s:Initializing batch parameter set",__func__);
 
     parm_buffer_new_t *param_buf = (parm_buffer_new_t *)p_table;
     memset(param_buf, 0, sizeof(ONE_MB_OF_PARAMS));
@@ -8541,7 +8541,7 @@ int32_t QCameraParameters::AddSetParmEntryToBatch(void *p_table,
     curr_param->size = (int32_t)paramLength;
     curr_param->aligned_size = aligned_size_req;
     memcpy(&curr_param->data[0], paramValue, paramLength);
-    CDBG_HIGH("%s: num_entry: %d, paramType: %d, paramLength: %d, aligned_size_req: %d",
+    CDBG("%s: num_entry: %d, paramType: %d, paramLength: %d, aligned_size_req: %d",
             __func__, param_buf->num_entry, paramType, paramLength, aligned_size_req);
 
     return NO_ERROR;
@@ -8633,7 +8633,7 @@ int32_t QCameraParameters::commitSetBatch()
     if (m_pParamBuf->num_entry > 0) {
         rc = m_pCamOpsTbl->ops->set_parms(m_pCamOpsTbl->camera_handle,
                                                       (void *)m_pParamBuf);
-        CDBG_HIGH("%s:waiting for commitSetBatch to complete",__func__);
+        CDBG("%s:waiting for commitSetBatch to complete",__func__);
         sem_wait(&m_pParamBuf->cam_sync_sem);
     }
     if (rc == NO_ERROR) {
