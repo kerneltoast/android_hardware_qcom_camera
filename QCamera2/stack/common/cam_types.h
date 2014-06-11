@@ -994,11 +994,7 @@ typedef  struct {
     uint8_t is_sensor_params_valid;
     cam_sensor_params_t sensor_params;
 
-    /* Meta valid params */
-    uint8_t is_meta_valid;
-    cam_meta_valid_t meta_valid_params;
-
-    /* Meta valid params */
+    /* Preview skip valid params */
     uint8_t is_preview_frame_skip_valid;
     cam_frame_idx_range_t preview_frame_skip_idx_range;
 
