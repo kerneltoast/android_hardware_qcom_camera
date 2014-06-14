@@ -444,6 +444,7 @@ int32_t mm_stream_fsm_inited(mm_stream_t *my_obj,
 {
     int32_t rc = 0;
     char dev_name[MM_CAMERA_DEV_NAME_LEN];
+    char t_devname[MM_CAMERA_DEV_NAME_LEN];
 
     CDBG("%s: E, my_handle = 0x%x, fd = %d, state = %d",
          __func__, my_obj->my_hdl, my_obj->fd, my_obj->state);
@@ -454,9 +455,12 @@ int32_t mm_stream_fsm_inited(mm_stream_t *my_obj,
             rc = -1;
             break;
         }
-
-        snprintf(dev_name, sizeof(dev_name), "/dev/%s",
-                 mm_camera_util_get_dev_name(my_obj->ch_obj->cam_obj->my_hdl));
+        strcpy(t_devname, mm_camera_util_get_dev_name(my_obj->ch_obj->cam_obj->my_hdl));
+        if (t_devname == NULL) {
+            rc = -1;
+            break;
+        }
+        snprintf(dev_name, sizeof(dev_name), "/dev/%s",t_devname );
 
         my_obj->fd = open(dev_name, O_RDWR | O_NONBLOCK);
         if (my_obj->fd <= 0) {

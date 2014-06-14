@@ -249,11 +249,16 @@ int32_t mm_camera_open(mm_camera_obj_t *my_obj)
     int8_t n_try=MM_CAMERA_DEV_OPEN_TRIES;
     uint8_t sleep_msec=MM_CAMERA_DEV_OPEN_RETRY_SLEEP;
     unsigned int cam_idx = 0;
+    char t_devname[MM_CAMERA_DEV_NAME_LEN];
 
     CDBG("%s:  begin\n", __func__);
 
-    snprintf(dev_name, sizeof(dev_name), "/dev/%s",
-             mm_camera_util_get_dev_name(my_obj->my_hdl));
+    strcpy(t_devname, mm_camera_util_get_dev_name(my_obj->my_hdl));
+    if (t_devname == NULL) {
+        rc = -1;
+        goto on_error;
+    }
+    snprintf(dev_name, sizeof(dev_name), "/dev/%s",t_devname );
     sscanf(dev_name, "/dev/video%u", &cam_idx);
     CDBG_ERROR("%s: dev name = %s, cam_idx = %d", __func__, dev_name, cam_idx);
 

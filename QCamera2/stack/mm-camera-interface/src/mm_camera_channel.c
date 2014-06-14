@@ -2043,6 +2043,11 @@ int32_t mm_channel_superbuf_comp_and_enqueue(
 
    mm_stream_t* stream_obj = mm_channel_util_get_stream_by_handler(ch_obj,
                buf_info->stream_id);
+   if (stream_obj == NULL) {
+       CDBG_ERROR("%s: returned NULL",__func__);
+       return -1;
+   }
+
    if (CAM_STREAM_TYPE_METADATA == stream_obj->stream_info->stream_type) {
     const cam_metadata_info_t *metadata;
     metadata = (const cam_metadata_info_t *)buf_info->buf->buffer;

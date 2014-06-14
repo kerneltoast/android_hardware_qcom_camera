@@ -1692,7 +1692,8 @@ int32_t QCameraPostProcessor::encodeData(qcamera_jpeg_data_t *jpeg_job_data,
         }
 
         jpg_job.encode_job.thumb_dim.crop = crop;
-        jpg_job.encode_job.thumb_index = thumb_frame->buf_idx;
+        if (thumb_frame)
+            jpg_job.encode_job.thumb_index = thumb_frame->buf_idx;
         CDBG_HIGH("%s, thumbnail src w/h (%dx%d), dst w/h (%dx%d)", __func__,
             jpg_job.encode_job.thumb_dim.src_dim.width,
             jpg_job.encode_job.thumb_dim.src_dim.height,
@@ -1712,7 +1713,7 @@ int32_t QCameraPostProcessor::encodeData(qcamera_jpeg_data_t *jpeg_job_data,
     jpg_job.encode_job.cam_exif_params = m_parent->mExifParams;
 
     if (NULL != jpg_job.encode_job.p_metadata &&
-        m_parent->mParameters.isMobicatEnabled()) {
+        m_parent->mParameters.isMobicatEnabled() && jpeg_job_data->metadata != NULL) {
         memcpy(jpg_job.encode_job.p_metadata->
             chromatix_mobicat_af_data.private_mobicat_af_data,
             jpg_job.encode_job.cam_exif_params.af_mobicat_params,

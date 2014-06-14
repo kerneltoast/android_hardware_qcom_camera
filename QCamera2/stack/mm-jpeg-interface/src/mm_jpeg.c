@@ -2152,7 +2152,7 @@ int32_t mm_jpeg_create_session(mm_jpeg_obj *my_obj,
 
   /* init output buf queue */
   p_out_buf_q = (mm_jpeg_queue_t *) malloc(sizeof(*p_out_buf_q));
-  if (NULL == p_session_handle_q) {
+  if (NULL == p_out_buf_q) {
     CDBG_ERROR("%s:%d] Error", __func__, __LINE__);
     return -1;
   }
@@ -2732,19 +2732,21 @@ mm_jpeg_job_q_node_t* mm_jpeg_queue_remove_job_by_job_id(
     node = member_of(pos, mm_jpeg_q_node_t, list);
     data = (mm_jpeg_job_q_node_t *)node->data;
 
-    if (data->type == MM_JPEG_CMD_TYPE_DECODE_JOB) {
-      lq_job_id = data->dec_info.job_id;
-    } else {
-      lq_job_id = data->enc_info.job_id;
-    }
+    if (data != NULL) {
+        if (data->type == MM_JPEG_CMD_TYPE_DECODE_JOB) {
+            lq_job_id = data->dec_info.job_id;
+        } else {
+            lq_job_id = data->enc_info.job_id;
+        }
 
-    if (data && (lq_job_id == job_id)) {
-      CDBG_ERROR("%s:%d] found matching job id", __func__, __LINE__);
-      job_node = data;
-      cam_list_del_node(&node->list);
-      queue->size--;
-      free(node);
-      break;
+      if (lq_job_id == job_id) {
+        CDBG_ERROR("%s:%d] found matching job id", __func__, __LINE__);
+        job_node = data;
+        cam_list_del_node(&node->list);
+        queue->size--;
+        free(node);
+        break;
+      }
     }
     pos = pos->next;
   }

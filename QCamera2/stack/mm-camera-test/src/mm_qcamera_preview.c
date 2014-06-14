@@ -58,6 +58,11 @@ static void mm_app_metadata_notify_cb(mm_camera_super_buf_t *bufs,
           break;
       }
   }
+  if (NULL == p_stream) {
+      CDBG_ERROR("%s: cannot find metadata stream", __func__);
+      return;
+  }
+
   /* find preview frame */
   for (i = 0; i < bufs->num_bufs; i++) {
       if (bufs->bufs[i]->stream_id == p_stream->s_id) {
@@ -65,14 +70,13 @@ static void mm_app_metadata_notify_cb(mm_camera_super_buf_t *bufs,
           break;
       }
   }
-
-  if (NULL == p_stream) {
-      CDBG_ERROR("%s: cannot find metadata stream", __func__);
-      return;
-  }
   if (pme->metadata == NULL) {
     /* The app will free the meta data, we don't need to bother here */
     pme->metadata = malloc(sizeof(cam_metadata_info_t));
+    if (pme->metadata == NULL) {
+        CDBG_ERROR("%s:error: malloc failed allocate memory",__func__);
+        return;
+    }
   }
   memcpy(pme->metadata, frame->buffer, sizeof(cam_metadata_info_t));
 
@@ -242,6 +246,9 @@ static void mm_app_zsl_notify_cb(mm_camera_super_buf_t *bufs,
       /* fill in meta data frame ptr */
       if (md_frame != NULL) {
         pme->metadata = (cam_metadata_info_t *)md_frame->buffer;
+      } else {
+          CDBG_ERROR("%s: error getting metadata frame",__func__);
+          goto exit;
       }
     }
     /* find snapshot frame */

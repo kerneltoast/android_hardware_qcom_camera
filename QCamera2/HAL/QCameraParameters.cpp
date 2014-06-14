@@ -1713,11 +1713,11 @@ bool QCameraParameters::UpdateHFRFrameRate(const QCameraParameters& params)
     const char *prev_hfrStr = CameraParameters::get(KEY_QC_VIDEO_HIGH_FRAME_RATE);
     const char *prev_hsrStr = CameraParameters::get(KEY_QC_VIDEO_HIGH_SPEED_RECORDING);
 
-    if(hfrStr != NULL && strcmp(hfrStr, prev_hfrStr)) {
-        updateParamEntry(KEY_QC_VIDEO_HIGH_FRAME_RATE, hfrStr);
-    }
+      if ((hfrStr != NULL) && (prev_hfrStr != NULL) && strcmp(hfrStr, prev_hfrStr)) {
+          updateParamEntry(KEY_QC_VIDEO_HIGH_FRAME_RATE, hfrStr);
+      }
 
-    if(hsrStr != NULL && strcmp(hsrStr, prev_hsrStr)) {
+    if ((hsrStr != NULL) && (prev_hsrStr != NULL) && strcmp(hsrStr, prev_hsrStr)) {
         updateParamEntry(KEY_QC_VIDEO_HIGH_SPEED_RECORDING, hsrStr);
 
     }
@@ -1865,9 +1865,10 @@ int32_t QCameraParameters::setFocusMode(const QCameraParameters& params)
     //a scene is decided and set in backend. In HAL, it is taken care in setScenePreferences.
     bool isAutoSceneMode = FALSE;
     const char *scene_str = params.get(KEY_SCENE_MODE);
-    if(!strcmp(scene_str, SCENE_MODE_AUTO))
-        isAutoSceneMode = TRUE;
-
+    if (scene_str != NULL) {
+        if (!strcmp(scene_str, SCENE_MODE_AUTO))
+            isAutoSceneMode = TRUE;
+    }
     if (str != NULL) {
         if (prev_str == NULL ||
             (strcmp(str, prev_str) != 0 && isAutoSceneMode)){
@@ -1974,11 +1975,12 @@ int32_t  QCameraParameters::setFocusPosition(const QCameraParameters& params)
     const char *focus_str = params.get(KEY_FOCUS_MODE);
     CDBG_HIGH("%s, current focus mode: %s", __func__, focus_str);
 
-    if (strcmp(focus_str, FOCUS_MODE_MANUAL_POSITION)) {
-        CDBG("%s, dont set focus pos to back-end!", __func__);
-        return NO_ERROR;
+    if (focus_str != NULL) {
+        if (strcmp(focus_str, FOCUS_MODE_MANUAL_POSITION)) {
+            CDBG("%s, dont set focus pos to back-end!", __func__);
+            return NO_ERROR;
+        }
     }
-
     const char *pos = params.get(KEY_QC_MANUAL_FOCUS_POSITION);
     const char *prev_pos = get(KEY_QC_MANUAL_FOCUS_POSITION);
     const char *type = params.get(KEY_QC_MANUAL_FOCUS_POS_TYPE);
@@ -2271,9 +2273,11 @@ int32_t  QCameraParameters::setWBManualCCT(const QCameraParameters& params)
     const char *wb_str = params.get(KEY_WHITE_BALANCE);
     CDBG_HIGH("%s, current wb mode: %s", __func__, wb_str);
 
-    if (strcmp(wb_str, WHITE_BALANCE_MANUAL_CCT)) {
-        CDBG("%s, dont set cct to back-end.", __func__);
-        return NO_ERROR;
+    if (wb_str != NULL) {
+        if (strcmp(wb_str, WHITE_BALANCE_MANUAL_CCT)) {
+            CDBG("%s, dont set cct to back-end.", __func__);
+            return NO_ERROR;
+        }
     }
 
     const char *str = params.get(KEY_QC_WB_MANUAL_CCT);
@@ -7855,13 +7859,13 @@ int32_t QCameraParameters::getExifGpsDateTimeStamp(char *gpsDateStamp,
     if(str != NULL) {
         time_t unixTime = (time_t)atol(str);
         struct tm *UTCTimestamp = gmtime(&unixTime);
+        if (UTCTimestamp != NULL) {
+            strftime(gpsDateStamp, bufLen, "%Y:%m:%d", UTCTimestamp);
 
-        strftime(gpsDateStamp, bufLen, "%Y:%m:%d", UTCTimestamp);
-
-        getRational(&gpsTimeStamp[0], UTCTimestamp->tm_hour, 1);
-        getRational(&gpsTimeStamp[1], UTCTimestamp->tm_min, 1);
-        getRational(&gpsTimeStamp[2], UTCTimestamp->tm_sec, 1);
-
+            getRational(&gpsTimeStamp[0], UTCTimestamp->tm_hour, 1);
+            getRational(&gpsTimeStamp[1], UTCTimestamp->tm_min, 1);
+            getRational(&gpsTimeStamp[2], UTCTimestamp->tm_sec, 1);
+        }
         return NO_ERROR;
     } else {
         return BAD_VALUE;
