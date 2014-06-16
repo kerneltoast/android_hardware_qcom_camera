@@ -39,6 +39,8 @@
 #include <cutils/properties.h>
 #include <stdlib.h>
 #include <media/msm_cam_sensor.h>
+#include <cutils/properties.h>
+#include <stdlib.h>
 
 #include "mm_camera_dbg.h"
 #include "mm_camera_interface.h"
@@ -1413,6 +1415,12 @@ uint8_t get_num_of_cameras()
         gMmCameraIntfLogLevel = 0; // Debug logs are not required if debug_mask is zero
 
     CDBG_HIGH("%s gMmCameraIntfLogLevel=%d",__func__, gMmCameraIntfLogLevel);
+
+    property_get("vold.decrypt", prop, "0");
+    int decrypt = atoi(prop);
+    if (decrypt == 1) {
+        return 0;
+    }
 
     /* lock the mutex */
     pthread_mutex_lock(&g_intf_lock);
