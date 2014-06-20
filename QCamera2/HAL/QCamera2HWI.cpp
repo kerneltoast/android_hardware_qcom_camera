@@ -1587,6 +1587,7 @@ uint8_t QCamera2HardwareInterface::getBufNumRequired(cam_stream_type_t stream_ty
             if (bufferCnt > maxStreamBuf) {
                 bufferCnt = maxStreamBuf;
             }
+            bufferCnt += minUndequeCount;
         }
         break;
     case CAM_STREAM_TYPE_OFFLINE_PROC:
