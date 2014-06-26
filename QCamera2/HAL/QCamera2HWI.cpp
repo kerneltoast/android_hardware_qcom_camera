@@ -1519,6 +1519,10 @@ uint8_t QCamera2HardwareInterface::getBufNumRequired(cam_stream_type_t stream_ty
                 bufferCnt = maxStreamBuf;
             }
             bufferCnt += minUndequeCount;
+            /* TODO: This is Temporary change to overcome the two BufDone/Buf Diverts coming
+               consecutively without SOF in HDR/AE bracketing use case */
+            if (mParameters.isHDREnabled() || mParameters.isAEBracketEnabled() )
+                bufferCnt += 2;
         }
         break;
     case CAM_STREAM_TYPE_SNAPSHOT:
