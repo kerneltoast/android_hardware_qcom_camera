@@ -4725,7 +4725,7 @@ int32_t QCameraParameters::setPreviewFpsRange(int min_fps,
     property_get("persist.debug.set.fixedfps", value, "0");
     fixedFpsValue = atoi(value);
 
-    ALOGE("%s: E minFps = %d, maxFps = %d , vid minFps = %d, vid maxFps = %d",
+    CDBG("%s: E minFps = %d, maxFps = %d , vid minFps = %d, vid maxFps = %d",
                 __func__, min_fps, max_fps, vid_min_fps, vid_max_fps);
 
     if(fixedFpsValue != 0) {
@@ -4733,7 +4733,7 @@ int32_t QCameraParameters::setPreviewFpsRange(int min_fps,
       max_fps = (int)fixedFpsValue*1000;
     }
     snprintf(str, sizeof(str), "%d,%d", min_fps, max_fps);
-    ALOGE("%s: Setting preview fps range %s", __func__, str);
+    CDBG("%s: Setting preview fps range %s", __func__, str);
     updateParamEntry(KEY_PREVIEW_FPS_RANGE, str);
     cam_fps_range_t fps_range;
     memset(&fps_range, 0x00, sizeof(cam_fps_range_t));
@@ -4743,21 +4743,15 @@ int32_t QCameraParameters::setPreviewFpsRange(int min_fps,
     fps_range.video_max_fps = vid_max_fps / float (1000.0);
 
 
-    ALOGE("%s: Updated: minFps = %d, maxFps = %d ,"
+    CDBG_HIGH("%s: Updated: minFps = %d, maxFps = %d ,"
             " vid minFps = %d, vid maxFps = %d",
             __func__, min_fps, max_fps, vid_min_fps, vid_max_fps);
 
     if ( NULL != m_AdjustFPS ) {
-        m_AdjustFPS->recalcFPSRange(min_fps, max_fps, vid_min_fps, vid_max_fps);
-        ALOGE("%s: Thermal adjusted preview fps range %d,%d, %d, %d",
-              __func__,
-              min_fps,
-              max_fps, vid_min_fps, vid_max_fps);
-        fps_range.min_fps = min_fps;
-        fps_range.max_fps = max_fps;
-        fps_range.video_min_fps = vid_min_fps;
-        fps_range.video_max_fps = vid_max_fps;
-
+        m_AdjustFPS->recalcFPSRange(min_fps, max_fps, fps_range);
+        CDBG_HIGH("%s: Thermal adjusted Preview fps range %3.2f,%3.2f, %3.2f, %3.2f",
+              __func__, fps_range.min_fps, fps_range.max_fps,
+              fps_range.video_min_fps, fps_range.video_max_fps);
     }
 
     return AddSetParmEntryToBatch(m_pParamBuf,
