@@ -956,10 +956,13 @@ int32_t QCameraReprocessChannel::addReprocStreamsFromSource(QCameraAllocator& al
             }
 
             cam_stream_type_t type = CAM_STREAM_TYPE_DEFAULT;
-            type = streamInfo->reprocess_config.online.input_stream_type;
+            if (offline) {
+                type = streamInfo->reprocess_config.offline.input_type;
+            } else {
+                type = streamInfo->reprocess_config.online.input_stream_type;
+            }
             if (type == CAM_STREAM_TYPE_SNAPSHOT) {
-                int flipMode =
-                    param.getFlipMode(streamInfo->reprocess_config.online.input_stream_type);
+                int flipMode = param.getFlipMode(type);
                 if (flipMode > 0) {
                     streamInfo->reprocess_config.pp_feature_config.feature_mask |= CAM_QCOM_FEATURE_FLIP;
                     streamInfo->reprocess_config.pp_feature_config.flip = flipMode;
