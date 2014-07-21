@@ -544,7 +544,6 @@ int mm_app_open(mm_camera_app_t *cam_app,
     }
     test_obj->params_buffer = (parm_buffer_new_t*) test_obj->parm_buf.mem_info.data;
     CDBG_HIGH("\n%s params_buffer=%p\n",__func__,test_obj->params_buffer);
-    sem_init(&test_obj->params_buffer->cam_sync_sem, 0, 0);
 
     rc = test_obj->cam->ops->register_event_notify(test_obj->cam->camera_handle,
                                                    notify_evt_cb,
@@ -613,7 +612,6 @@ int mm_app_close(mm_camera_test_obj_t *test_obj)
     if (rc != MM_CAMERA_OK) {
         CDBG_ERROR("%s: unmap setparm buf failed, rc=%d", __func__, rc);
     }
-    sem_destroy(&test_obj->params_buffer->cam_sync_sem);
 
     rc = test_obj->cam->ops->close_camera(test_obj->cam->camera_handle);
     if (rc != MM_CAMERA_OK) {
@@ -801,8 +799,7 @@ int commitSetBatch(mm_camera_test_obj_t *test_obj)
 
     if (param_buf->num_entry > 0) {
         rc = test_obj->cam->ops->set_parms(test_obj->cam->camera_handle, param_buf);
-        ALOGD("%s:waiting for commitSetBatch to complete",__func__);
-        sem_wait(&param_buf->cam_sync_sem);
+        ALOGD("%s: commitSetBatch done",__func__);
     }
 
     return rc;
@@ -816,8 +813,7 @@ int commitGetBatch(mm_camera_test_obj_t *test_obj)
 
     if (param_buf->num_entry > 0) {
         rc = test_obj->cam->ops->get_parms(test_obj->cam->camera_handle, param_buf);
-        ALOGD("%s:waiting for commitGetBatch to complete",__func__);
-        sem_wait(&param_buf->cam_sync_sem);
+        ALOGD("%s: commitGetBatch done",__func__);
     }
     return rc;
 }

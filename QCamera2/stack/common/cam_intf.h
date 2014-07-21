@@ -635,16 +635,6 @@ typedef struct {
     uint32_t num_entry;
     uint32_t tot_rem_size;
     uint32_t curr_size;
-    //there is no clear documentation in Android on the use of a
-    //named semaphore for inter-process synchronization, like
-    //the ones available in System V and Posix. However, as this
-    //semaphore will reside in a mapped memory between two
-    //processes, it's expected to work well. Detailed testing may
-    //be necessary. Semaphore is kicked in only in the extreme
-    //case of a batch set param, where memory memory for the
-    //initial batch is exhausted and caller waits before they are
-    //copied in the camera daemon
-    sem_t   cam_sync_sem;
     char entry[1];
 } parm_buffer_new_t;
 
