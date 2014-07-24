@@ -1182,18 +1182,23 @@ void QCamera2HardwareInterface::metadata_stream_cb_routine(mm_camera_super_buf_t
 
     /* Update 3A debug info */
     if (pMetaData->is_ae_exif_debug_valid) {
+        pme->mExifParams.ae_debug_params_valid = TRUE;
         pme->mExifParams.ae_debug_params = pMetaData->ae_exif_debug_params;
     }
     if (pMetaData->is_awb_exif_debug_valid) {
+        pme->mExifParams.awb_debug_params_valid = TRUE;
         pme->mExifParams.awb_debug_params = pMetaData->awb_exif_debug_params;
     }
     if (pMetaData->is_af_exif_debug_valid) {
+        pme->mExifParams.af_debug_params_valid = TRUE;
         pme->mExifParams.af_debug_params = pMetaData->af_exif_debug_params;
     }
-    if(pMetaData->is_asd_exif_debug_valid) {
+    if (pMetaData->is_asd_exif_debug_valid) {
+        pme->mExifParams.asd_debug_params_valid = TRUE;
         pme->mExifParams.asd_debug_params = pMetaData->asd_exif_debug_params;
     }
-    if(pMetaData->is_stats_buffer_exif_debug_valid) {
+    if (pMetaData->is_stats_buffer_exif_debug_valid) {
+        pme->mExifParams.stats_debug_params_valid = TRUE;
         pme->mExifParams.stats_debug_params = pMetaData->stats_buffer_exif_debug_params;
     }
 
