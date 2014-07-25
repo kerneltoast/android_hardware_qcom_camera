@@ -80,6 +80,11 @@ typedef struct {
   cam_af_exif_debug_t af_debug_params;
   cam_asd_exif_debug_t asd_debug_params;
   cam_stats_buffer_exif_debug_t stats_debug_params;
+  uint8_t ae_debug_params_valid;
+  uint8_t awb_debug_params_valid;
+  uint8_t af_debug_params_valid;
+  uint8_t asd_debug_params_valid;
+  uint8_t stats_debug_params_valid;
   cam_sensor_params_t sensor_params;
   cam_flash_mode_t ui_flash_mode;
   exif_flash_func_pre_t flash_presence;
