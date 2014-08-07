@@ -224,6 +224,7 @@ static void mm_channel_process_stream_buf(mm_camera_cmdcb_t * cmd_cb,
             mm_camera_start_zsl_snapshot(ch_obj->cam_obj);
             ch_obj->startZSlSnapshotCalled = TRUE;
             ch_obj->needLEDFlash = FALSE;
+            ch_obj->previewSkipCnt = 0;
         } else if ((ch_obj->pending_cnt == 0 && ch_obj->startZSlSnapshotCalled == TRUE)
                 && (ch_obj->manualZSLSnapshot == FALSE)) {
             CDBG_HIGH("%s: got picture cancelled, stop zsl snapshot", __func__);
@@ -317,6 +318,7 @@ static void mm_channel_process_stream_buf(mm_camera_cmdcb_t * cmd_cb,
                 if ((ch_obj->pending_cnt == 0 && ch_obj->startZSlSnapshotCalled == TRUE)
                         && (ch_obj->manualZSLSnapshot == FALSE)) {
                     CDBG_HIGH("%s: received all frames requested, stop zsl snapshot", __func__);
+                    ch_obj->previewSkipCnt = MM_CAMERA_POST_FLASH_PREVIEW_SKIP_CNT;
                     mm_camera_stop_zsl_snapshot(ch_obj->cam_obj);
                     ch_obj->startZSlSnapshotCalled = FALSE;
                 }
