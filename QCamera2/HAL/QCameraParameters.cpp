@@ -127,7 +127,9 @@ const char QCameraParameters::KEY_QC_SUPPORTED_AF_BRACKET_MODES[] = "af-bracket-
 const char QCameraParameters::KEY_QC_CHROMA_FLASH[] = "chroma-flash";
 const char QCameraParameters::KEY_QC_SUPPORTED_CHROMA_FLASH_MODES[] = "chroma-flash-values";
 const char QCameraParameters::KEY_QC_OPTI_ZOOM[] = "opti-zoom";
+const char QCameraParameters::KEY_QC_SEE_MORE[] = "see-more";
 const char QCameraParameters::KEY_QC_SUPPORTED_OPTI_ZOOM_MODES[] = "opti-zoom-values";
+const char QCameraParameters::KEY_QC_SUPPORTED_SEE_MORE_MODES[] = "see-more-values";
 const char QCameraParameters::KEY_QC_WB_MANUAL_CCT[] = "wb-manual-cct";
 const char QCameraParameters::KEY_QC_MIN_WB_CCT[] = "min-wb-cct";
 const char QCameraParameters::KEY_QC_MAX_WB_CCT[] = "max-wb-cct";
@@ -659,6 +661,7 @@ QCameraParameters::QCameraParameters()
       m_bAFBracketingOn(false),
       m_bChromaFlashOn(false),
       m_bOptiZoomOn(false),
+      m_bSeeMoreOn(false),
       m_bHfrMode(false),
       mHfrMode(CAM_HFR_MODE_OFF),
       m_bDisplayFrame(true),
@@ -739,6 +742,7 @@ QCameraParameters::QCameraParameters(const String8 &params)
     m_bAFBracketingOn(false),
     m_bChromaFlashOn(false),
     m_bOptiZoomOn(false),
+    m_bSeeMoreOn(false),
     m_bHfrMode(false),
     mHfrMode(CAM_HFR_MODE_OFF),
     m_bAeBracketingEnabled(false),
@@ -3157,6 +3161,37 @@ int32_t QCameraParameters::setOptiZoom(const QCameraParameters& params)
     return NO_ERROR;
 }
 
+/*===========================================================================
+ * FUNCTION   : setSeeMore
+ *
+ * DESCRIPTION: set see more (llvd) from user setting
+ *
+ * PARAMETERS :
+ *   @params  : user setting parameters
+ *
+ * RETURN     : int32_t type of status
+ *              NO_ERROR  -- success
+ *              none-zero failure code
+ *==========================================================================*/
+int32_t QCameraParameters::setSeeMore(const QCameraParameters& params)
+{
+    if ((m_pCapability->qcom_supported_feature_mask &
+          CAM_QCOM_FEATURE_LLVD) == 0){
+      CDBG("%s: See more is not supported",__func__);
+      return NO_ERROR;
+    }
+    const char *str = params.get(KEY_QC_SEE_MORE);
+    const char *prev_str = get(KEY_QC_SEE_MORE);
+    CDBG_HIGH("%s: str =%s & prev_str =%s",__func__, str, prev_str);
+    if (str != NULL) {
+        if (prev_str == NULL ||
+            strcmp(str, prev_str) != 0) {
+            m_bNeedRestart = true;
+            return setSeeMore(str);
+        }
+    }
+    return NO_ERROR;
+}
 
 /*===========================================================================
  * FUNCTION   : setRedeyeReduction
@@ -3827,6 +3862,7 @@ int32_t QCameraParameters::updateParameters(QCameraParameters& params,
     if ((rc = setAFBracket(params)))                    final_rc = rc;
     if ((rc = setChromaFlash(params)))                  final_rc = rc;
     if ((rc = setOptiZoom(params)))                     final_rc = rc;
+    if ((rc = setSeeMore(params)))                      final_rc = rc;
     if ((rc = setLongshotParam(params)))                final_rc = rc;
 
     if ((rc = updateFlash(false)))                      final_rc = rc;
@@ -4347,6 +4383,13 @@ int32_t QCameraParameters::initDefaultParameters()
     // Set feature on/off
     String8 onOffValues = createValuesStringFromMap(
         ON_OFF_MODES_MAP, sizeof(ON_OFF_MODES_MAP) / sizeof(QCameraMap));
+
+    //Set See more (LLVD)
+    if (m_pCapability->qcom_supported_feature_mask &
+            CAM_QCOM_FEATURE_LLVD) {
+        set(KEY_QC_SUPPORTED_SEE_MORE_MODES, onOffValues);
+        setSeeMore(VALUE_OFF);
+    }
 
     //Set Scene Detection
     set(KEY_QC_SUPPORTED_SCENE_DETECT, onOffValues);
@@ -6523,7 +6566,7 @@ int32_t QCameraParameters::setChromaFlash(const char *chromaFlashStr)
  * DESCRIPTION: set opti zoom value
  *
  * PARAMETERS :
- *   @aecBracketStr : opti zoom value string
+ *   @optiZoomStr : opti zoom value string
  *
  * RETURN     : int32_t type of status
  *              NO_ERROR  -- success
@@ -6545,6 +6588,37 @@ int32_t QCameraParameters::setOptiZoom(const char *optiZoomStr)
     }
     ALOGE("Invalid opti zoom value: %s",
         (optiZoomStr == NULL) ? "NULL" : optiZoomStr);
+    return BAD_VALUE;
+}
+
+/*===========================================================================
+ * FUNCTION   : setSeeMore
+ *
+ * DESCRIPTION: set see more value
+ *
+ * PARAMETERS :
+ *   @seeMoreStr : see more value string
+ *
+ * RETURN     : int32_t type of status
+ *              NO_ERROR  -- success
+ *              none-zero failure code
+ *==========================================================================*/
+int32_t QCameraParameters::setSeeMore(const char *seeMoreStr)
+{
+    CDBG_HIGH("%s: seeMoreStr =%s",__func__,seeMoreStr);
+    if(seeMoreStr != NULL) {
+        int value = lookupAttr(ON_OFF_MODES_MAP,
+                               sizeof(ON_OFF_MODES_MAP)/sizeof(QCameraMap),
+                               seeMoreStr);
+        if(value != NAME_NOT_FOUND) {
+            m_bSeeMoreOn = (value != 0);
+            updateParamEntry(KEY_QC_SEE_MORE, seeMoreStr);
+
+            return NO_ERROR;
+        }
+    }
+    ALOGE("Invalid see more value: %s",
+        (seeMoreStr == NULL) ? "NULL" : seeMoreStr);
     return BAD_VALUE;
 }
 
@@ -9253,6 +9327,48 @@ uint8_t QCameraParameters::getNumOfExtraBuffersForImageProc()
     }
 
     return numOfBufs * getBurstNum();
+}
+
+/*===========================================================================
+ * FUNCTION   : getNumOfExtraBuffersForVideo
+ *
+ * DESCRIPTION: get number of extra buffers needed by image processing
+ *
+ * PARAMETERS : none
+ *
+ * RETURN     : number of extra buffers needed by ImageProc;
+ *              0 if not ImageProc enabled
+ *==========================================================================*/
+uint8_t QCameraParameters::getNumOfExtraBuffersForVideo()
+{
+    uint8_t numOfBufs = 0;
+
+    if (isSeeMoreEnabled()) {
+        numOfBufs = 1;
+    }
+
+    return numOfBufs;
+}
+
+/*===========================================================================
+ * FUNCTION   : getNumOfExtraBuffersForPreview
+ *
+ * DESCRIPTION: get number of extra buffers needed by image processing
+ *
+ * PARAMETERS : none
+ *
+ * RETURN     : number of extra buffers needed by ImageProc;
+ *              0 if not ImageProc enabled
+ *==========================================================================*/
+uint8_t QCameraParameters::getNumOfExtraBuffersForPreview()
+{
+    uint8_t numOfBufs = 0;
+
+    if (isSeeMoreEnabled() && !isZSLMode() && getRecordingHintValue()) {
+        numOfBufs = 1;
+    }
+
+    return numOfBufs;
 }
 
 }; // namespace qcamera
