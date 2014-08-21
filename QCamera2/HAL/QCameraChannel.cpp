@@ -683,6 +683,24 @@ int32_t QCameraPicChannel::startAdvancedCapture(mm_camera_advanced_capture_t typ
 }
 
 /*===========================================================================
+* FUNCTION   : flushSuperbuffer
+ *
+ * DESCRIPTION: flush the all superbuffer frames.
+ *
+ * PARAMETERS :
+ *   @frame_idx : .
+ *
+ * RETURN     : int32_t type of status
+ *              NO_ERROR  -- success
+ *              none-zero failure code
+ *==========================================================================*/
+int32_t QCameraPicChannel::flushSuperbuffer(uint32_t frame_idx)
+{
+    int32_t rc = m_camOps->flush_super_buf_queue(m_camHandle, m_handle, frame_idx);
+    return rc;
+}
+
+/*===========================================================================
  * FUNCTION   : QCameraVideoChannel
  *
  * DESCRIPTION: constructor of QCameraVideoChannel

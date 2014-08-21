@@ -97,6 +97,7 @@ public:
     int32_t takePicture(uint8_t num_of_snapshot);
     int32_t cancelPicture();
     int32_t startAdvancedCapture(mm_camera_advanced_capture_t type);
+    int32_t flushSuperbuffer(uint32_t frame_idx);
 };
 
 // video channel class
