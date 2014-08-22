@@ -1225,11 +1225,6 @@ int QCamera2HardwareInterface::openCamera()
 
     mParameters.init(gCamCapability[mCameraId], mCameraHandle, this, this);
 
-    rc = m_thermalAdapter.init(this);
-    if (rc != 0) {
-        ALOGE("Init thermal adapter failed");
-    }
-
     mCameraOpened = true;
 
     return NO_ERROR;
