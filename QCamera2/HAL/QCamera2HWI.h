@@ -395,6 +395,9 @@ private:
                            uint8_t index,
                            camera_frame_metadata_t *metadata);
 
+    int32_t sendPreviewCallback(QCameraStream *stream,
+                                QCameraGrallocMemory *memory, int32_t idx);
+
     int32_t addChannel(qcamera_ch_type_enum_t ch_type);
     int32_t startChannel(qcamera_ch_type_enum_t ch_type);
     int32_t stopChannel(qcamera_ch_type_enum_t ch_type);
