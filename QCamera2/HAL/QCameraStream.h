@@ -106,6 +106,7 @@ public:
 
     uint8_t getBufferCount() { return mNumBufs; }
     uint32_t getChannelHandle() { return mChannelHandle; }
+    int32_t getNumQueuedBuf();
 
     int mDumpFrame;
     int mDumpMetaFrame;
