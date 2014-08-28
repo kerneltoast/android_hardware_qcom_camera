@@ -835,6 +835,11 @@ typedef enum {
   S_PORTRAIT_BACKLIGHT,
   S_SCENERY_BACKLIGHT,
   S_BACKLIGHT,
+  S_NIGHT,
+  S_MACRO,
+  S_SPORTS,
+  S_MIXED_LIGHT,
+  S_INDOOR,
   S_MAX,
 } cam_auto_scene_t;
 
