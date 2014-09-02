@@ -270,6 +270,10 @@ public:
     static const char KEY_QC_OPTI_ZOOM[];
     static const char KEY_QC_SUPPORTED_OPTI_ZOOM_MODES[];
 
+    //See more
+    static const char KEY_QC_SEE_MORE[];
+    static const char KEY_QC_SUPPORTED_SEE_MORE_MODES[];
+
     //Longshot
     static const char KEY_QC_LONGSHOT_SUPPORTED[];
 
@@ -441,6 +445,10 @@ public:
     static const char OPTI_ZOOM_OFF[];
     static const char OPTI_ZOOM_ON[];
 
+    // Values for See More settings.
+    static const char SEE_MORE_OFF[];
+    static const char SEE_MORE_ON[];
+
     // Values for HFR settings.
     static const char VIDEO_HFR_OFF[];
     static const char VIDEO_HFR_2X[];
@@ -596,9 +604,12 @@ public:
 
     bool setStreamConfigure(bool isCapture, bool previewAsPostview);
     uint8_t getNumOfExtraBuffersForImageProc();
+    uint8_t getNumOfExtraBuffersForVideo();
+    uint8_t getNumOfExtraBuffersForPreview();
     bool needThumbnailReprocess(uint32_t *pFeatureMask);
     inline bool isUbiFocusEnabled() {return m_bAFBracketingOn;};
     inline bool isChromaFlashEnabled() {return m_bChromaFlashOn;};
+    inline bool isSeeMoreEnabled() {return m_bSeeMoreOn;};
     bool isOptiZoomEnabled();
     bool isDifferentFlipZSL();
     int32_t commitAFBracket(cam_af_bracketing_t afBracket);
@@ -669,6 +680,7 @@ private:
     int32_t setAFBracket(const QCameraParameters& );
     int32_t setChromaFlash(const QCameraParameters& );
     int32_t setOptiZoom(const QCameraParameters& );
+    int32_t setSeeMore(const QCameraParameters& );
     int32_t setRedeyeReduction(const QCameraParameters& );
     int32_t setGpsLocation(const QCameraParameters& );
     int32_t setRecordingHint(const QCameraParameters& );
@@ -727,6 +739,7 @@ private:
     int32_t setAFBracket(const char *afBracketStr);
     int32_t setChromaFlash(const char *chromaFlashStr);
     int32_t setOptiZoom(const char *optiZoomStr);
+    int32_t setSeeMore(const char *optiZoomStr);
     int32_t setRedeyeReduction(const char *redeyeStr);
     int32_t setWaveletDenoise(const char *wnrStr);
     int32_t setFaceRecognition(const char *faceRecog, int maxFaces);
@@ -798,6 +811,7 @@ private:
     static const QCameraMap CHROMA_FLASH_MODES_MAP[];
     static const QCameraMap OPTI_ZOOM_MODES_MAP[];
     static const QCameraMap CDS_MODES_MAP[];
+    static const QCameraMap SEE_MORE_MODES_MAP[];
 
     cam_capability_t *m_pCapability;
     mm_camera_vtbl_t *m_pCamOpsTbl;
@@ -850,6 +864,7 @@ private:
     bool m_bAFBracketingOn;
     bool m_bChromaFlashOn;
     bool m_bOptiZoomOn;
+    bool m_bSeeMoreOn;
     bool m_bUbiRefocus;
     cam_fps_range_t m_hfrFpsRange;
     bool m_bHfrMode;
