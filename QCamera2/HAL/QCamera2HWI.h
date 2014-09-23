@@ -632,6 +632,8 @@ private:
     int32_t mReprocJob;
     int32_t mRawdataJob;
     int32_t mOutputCount;
+    bool mPreviewFrameSkipValid;
+    cam_frame_idx_range_t mPreviewFrameSkipIdxRange;
 };
 
 }; // namespace qcamera

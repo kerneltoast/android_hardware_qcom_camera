@@ -48,6 +48,8 @@
 #define MM_CAMERA_DEV_OPEN_TRIES 2
 #define MM_CAMERA_DEV_OPEN_RETRY_SLEEP 20
 
+#define MM_CAMERA_POST_FLASH_PREVIEW_SKIP_CNT 3
+
 #ifndef TRUE
 #define TRUE 1
 #endif
@@ -379,6 +381,7 @@ typedef struct mm_channel {
     /* control for zsl led */
     uint8_t startZSlSnapshotCalled;
     uint8_t needLEDFlash;
+    uint8_t previewSkipCnt;
 
     uint8_t need3ABracketing;
     uint8_t isFlashBracketingEnabled;

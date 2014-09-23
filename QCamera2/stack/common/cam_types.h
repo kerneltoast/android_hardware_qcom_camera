@@ -998,6 +998,10 @@ typedef  struct {
     uint8_t is_meta_valid;
     cam_meta_valid_t meta_valid_params;
 
+    /* Meta valid params */
+    uint8_t is_preview_frame_skip_valid;
+    cam_frame_idx_range_t preview_frame_skip_idx_range;
+
     /*Tuning Data*/
     uint8_t is_tuning_params_valid;
     tuning_params_t tuning_params;
