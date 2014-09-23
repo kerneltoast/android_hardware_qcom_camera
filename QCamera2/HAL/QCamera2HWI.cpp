@@ -1704,10 +1704,12 @@ QCameraMemory *QCamera2HardwareInterface::allocateStreamBuf(cam_stream_type_t st
         break;
     case CAM_STREAM_TYPE_VIDEO:
         {
+            //Use uncached allocation by default
+            bCachedMem = QCAMERA_ION_USE_NOCACHE;
             char value[PROPERTY_VALUE_MAX];
-            property_get("persist.camera.mem.usecache", value, "1");
-            if (atoi(value) == 0) {
-                bCachedMem = QCAMERA_ION_USE_NOCACHE;
+            property_get("persist.camera.mem.usecache", value, "0");
+            if (atoi(value) == 1) {
+                bCachedMem = QCAMERA_ION_USE_CACHE;
             }
             ALOGD("%s: vidoe buf using cached memory = %d", __func__, bCachedMem);
             mem = new QCameraVideoMemory(mGetMemory, bCachedMem);
