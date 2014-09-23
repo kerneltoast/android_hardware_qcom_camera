@@ -1399,6 +1399,8 @@ uint8_t get_num_of_cameras()
     uint32_t temp;
     uint32_t log_level;
     uint32_t debug_mask;
+    char temp_dev_name[MM_CAMERA_DEV_NAME_LEN];
+    struct camera_info temp_info;
 
     /*  Higher 4 bits : Value of Debug log level (Default level is 1 to print all CDBG_HIGH)
         Lower 28 bits : Control mode for sub module logging(Only 3 sub modules in HAL)
@@ -1544,6 +1546,17 @@ uint8_t get_num_of_cameras()
     g_cam_ctrl.num_cam = num_cameras;
 
     get_sensor_info();
+
+    /*if front camera probe earlier than back camera, switch front camera and back camera dev_name and info*/
+    if (g_cam_ctrl.info[0].facing == CAMERA_FACING_FRONT && g_cam_ctrl.num_cam > 1) {
+        memcpy(temp_dev_name, g_cam_ctrl.video_dev_name[0], sizeof(temp_dev_name));
+        memcpy(g_cam_ctrl.video_dev_name[0], g_cam_ctrl.video_dev_name[1], sizeof(temp_dev_name));
+        memcpy(g_cam_ctrl.video_dev_name[1], temp_dev_name, sizeof(temp_dev_name));
+        memcpy(&temp_info, &g_cam_ctrl.info[0], sizeof(temp_info));
+        memcpy(&g_cam_ctrl.info[0], &g_cam_ctrl.info[1], sizeof(temp_info));
+        memcpy(&g_cam_ctrl.info[1], &temp_info, sizeof(temp_info));
+    }
+
     /* unlock the mutex */
     pthread_mutex_unlock(&g_intf_lock);
     CDBG("%s: num_cameras=%d\n", __func__, g_cam_ctrl.num_cam);
