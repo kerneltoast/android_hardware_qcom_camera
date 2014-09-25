@@ -386,7 +386,7 @@ int32_t QCameraPostProcessor::getJpegEncodingConfig(mm_jpeg_encode_params_t& enc
     // system property to disable the thumbnail encoding in order to reduce the power
     // by default thumbnail encoding is set to TRUE and explicitly set this property to
     // disable the thumbnail encoding
-    property_get("persist.camera.thumbnail.disable", prop, "0");
+    property_get("persist.camera.tn.disable", prop, "0");
     if (atoi(prop) == 1) {
         m_bThumbnailNeeded = FALSE;
         CDBG_HIGH("%s : m_bThumbnailNeeded is %d", __func__, m_bThumbnailNeeded);
