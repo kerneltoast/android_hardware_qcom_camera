@@ -2189,9 +2189,15 @@ void *QCameraPostProcessor::dataProcessRoutine(void *data)
 
                     mm_camera_super_buf_t *pp_frame = NULL;
                     if (pme->m_inputPPQ.getCurrentSize() > 0) {
-                        if (pme->m_ongoingPPQ.getCurrentSize() <
-                                pme->m_reprocStream->getNumQueuedBuf()) {
+                        if (!pme->m_parent->isLongshotEnabled() ||
+                                (pme->m_ongoingPPQ.getCurrentSize() <
+                                pme->m_reprocStream->getNumQueuedBuf())) {
                             pp_frame = (mm_camera_super_buf_t *)pme->m_inputPPQ.dequeue();
+                        }
+                        else {
+                            CDBG_HIGH("Postpone reprocess.On going reproc=%d,Queued reproc buf=%d",
+                                    pme->m_ongoingPPQ.getCurrentSize(),
+                                    pme->m_reprocStream->getNumQueuedBuf());
                         }
                     }
                     if (NULL != pp_frame) {
