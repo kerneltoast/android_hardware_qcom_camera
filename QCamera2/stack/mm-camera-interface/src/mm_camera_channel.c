@@ -1898,8 +1898,7 @@ int32_t mm_channel_handle_metadata(
         goto end;
     }
 
-    if ((CAM_STREAM_TYPE_METADATA == stream_obj->stream_info->stream_type) &&
-            (stream_obj->ch_obj == ch_obj)) {
+    if (CAM_STREAM_TYPE_METADATA == stream_obj->stream_info->stream_type) {
         const cam_metadata_info_t *metadata;
         metadata = (const cam_metadata_info_t *)buf_info->buf->buffer;
 
@@ -1910,91 +1909,101 @@ int32_t mm_channel_handle_metadata(
             goto end;
         }
 
-        for (i=0; i<ARRAY_SIZE(ch_obj->streams); i++) {
-            if (CAM_STREAM_TYPE_SNAPSHOT ==
-                    ch_obj->streams[i].stream_info->stream_type) {
-                snapshot_stream_id = ch_obj->streams[i].server_stream_id;
-                break;
-            }
-        }
-
-        if (metadata->is_crop_valid) {
-            for (i=0; i<metadata->crop_data.num_of_streams; i++) {
-                if (snapshot_stream_id == metadata->crop_data.crop_info[i].stream_id) {
-                    if (!metadata->crop_data.crop_info[i].crop.left &&
-                            !metadata->crop_data.crop_info[i].crop.top) {
-                        is_crop_1x_found = 1;
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (metadata->is_prep_snapshot_done_valid &&
-                metadata->is_good_frame_idx_range_valid) {
-            CDBG_ERROR("%s: prep_snapshot_done and good_idx_range shouldn't be valid at the same time", __func__);
+        if (metadata->is_meta_invalid) {
+            CDBG_HIGH("meta invalid: Skipping meta frame_id = %d \n",
+                    metadata->meta_invalid_params.meta_frame_id);
             rc = -1;
             goto end;
         }
 
-        if (ch_obj->isZoom1xFrameRequested) {
-            if (is_crop_1x_found) {
-                ch_obj->isZoom1xFrameRequested = 0;
-                queue->expected_frame_id = buf_info->frame_idx + 1;
-            } else {
-                queue->expected_frame_id += max_future_frame_offset;
-                /* Flush unwanted frames */
-                mm_channel_superbuf_flush_matched(ch_obj, queue);
+        if (stream_obj->ch_obj == ch_obj) {
+            for (i=0; i<ARRAY_SIZE(ch_obj->streams); i++) {
+                if (CAM_STREAM_TYPE_SNAPSHOT ==
+                        ch_obj->streams[i].stream_info->stream_type) {
+                    snapshot_stream_id = ch_obj->streams[i].server_stream_id;
+                    break;
+                }
             }
-            goto end;
-        }
 
-        if (metadata->is_prep_snapshot_done_valid) {
-            if (metadata->prep_snapshot_done_state == NEED_FUTURE_FRAME) {
-                queue->expected_frame_id += max_future_frame_offset;
-
-                mm_channel_superbuf_flush(ch_obj,
-                        queue, CAM_STREAM_TYPE_DEFAULT);
-
-                ch_obj->needLEDFlash = TRUE;
-            } else {
-                ch_obj->needLEDFlash = FALSE;
+            if (metadata->is_crop_valid) {
+                for (i=0; i<metadata->crop_data.num_of_streams; i++) {
+                    if (snapshot_stream_id == metadata->crop_data.crop_info[i].stream_id) {
+                        if (!metadata->crop_data.crop_info[i].crop.left &&
+                                !metadata->crop_data.crop_info[i].crop.top) {
+                            is_crop_1x_found = 1;
+                            break;
+                        }
+                    }
+                }
             }
-        } else if (metadata->is_good_frame_idx_range_valid) {
-            if (metadata->good_frame_idx_range.min_frame_idx >
-                queue->expected_frame_id) {
-                CDBG_HIGH("%s: min_frame_idx %d is greater than expected_frame_id %d",
-                    __func__, metadata->good_frame_idx_range.min_frame_idx,
-                    queue->expected_frame_id);
+
+            if (metadata->is_prep_snapshot_done_valid &&
+                    metadata->is_good_frame_idx_range_valid) {
+                CDBG_ERROR("%s: prep_snapshot_done and good_idx_range shouldn't be valid"
+                        "at the same time", __func__);
+                rc = -1;
+                goto end;
             }
-            queue->expected_frame_id =
-                metadata->good_frame_idx_range.min_frame_idx;
-        } else if (ch_obj->need3ABracketing &&
-                   !metadata->is_good_frame_idx_range_valid) {
-               /* Flush unwanted frames */
-               mm_channel_superbuf_flush_matched(ch_obj, queue);
-               queue->expected_frame_id += max_future_frame_offset;
-        }
-        if (ch_obj->isFlashBracketingEnabled &&
-            metadata->is_good_frame_idx_range_valid) {
-            /* Flash bracketing needs two frames, with & without led flash.
-            * in valid range min frame is with led flash and max frame is
-            * without led flash */
-            queue->expected_frame_id =
-                metadata->good_frame_idx_range.min_frame_idx;
-            /* max frame is without led flash */
-            queue->expected_frame_id_without_led =
-                metadata->good_frame_idx_range.max_frame_idx;
-        } else if (metadata->is_good_frame_idx_range_valid) {
-             if (metadata->good_frame_idx_range.min_frame_idx >
-                 queue->expected_frame_id) {
-                 CDBG_HIGH("%s: min_frame_idx %d is greater than expected_frame_id %d",
-                     __func__, metadata->good_frame_idx_range.min_frame_idx,
-                     queue->expected_frame_id);
-             }
-             queue->expected_frame_id =
-                 metadata->good_frame_idx_range.min_frame_idx;
-             ch_obj->need3ABracketing = FALSE;
+
+            if (ch_obj->isZoom1xFrameRequested) {
+                if (is_crop_1x_found) {
+                    ch_obj->isZoom1xFrameRequested = 0;
+                    queue->expected_frame_id = buf_info->frame_idx + 1;
+                } else {
+                    queue->expected_frame_id += max_future_frame_offset;
+                    /* Flush unwanted frames */
+                    mm_channel_superbuf_flush_matched(ch_obj, queue);
+                }
+                goto end;
+            }
+
+            if (metadata->is_prep_snapshot_done_valid) {
+                if (metadata->prep_snapshot_done_state == NEED_FUTURE_FRAME) {
+                    queue->expected_frame_id += max_future_frame_offset;
+
+                    mm_channel_superbuf_flush(ch_obj,
+                            queue, CAM_STREAM_TYPE_DEFAULT);
+
+                    ch_obj->needLEDFlash = TRUE;
+                } else {
+                    ch_obj->needLEDFlash = FALSE;
+                }
+            } else if (metadata->is_good_frame_idx_range_valid) {
+                if (metadata->good_frame_idx_range.min_frame_idx >
+                    queue->expected_frame_id) {
+                    CDBG_HIGH("%s: min_frame_idx %d is greater than expected_frame_id %d",
+                        __func__, metadata->good_frame_idx_range.min_frame_idx,
+                        queue->expected_frame_id);
+                }
+                queue->expected_frame_id =
+                    metadata->good_frame_idx_range.min_frame_idx;
+            } else if (ch_obj->need3ABracketing &&
+                       !metadata->is_good_frame_idx_range_valid) {
+                   /* Flush unwanted frames */
+                   mm_channel_superbuf_flush_matched(ch_obj, queue);
+                   queue->expected_frame_id += max_future_frame_offset;
+            }
+            if (ch_obj->isFlashBracketingEnabled &&
+                metadata->is_good_frame_idx_range_valid) {
+                /* Flash bracketing needs two frames, with & without led flash.
+                * in valid range min frame is with led flash and max frame is
+                * without led flash */
+                queue->expected_frame_id =
+                    metadata->good_frame_idx_range.min_frame_idx;
+                /* max frame is without led flash */
+                queue->expected_frame_id_without_led =
+                    metadata->good_frame_idx_range.max_frame_idx;
+            } else if (metadata->is_good_frame_idx_range_valid) {
+                 if (metadata->good_frame_idx_range.min_frame_idx >
+                     queue->expected_frame_id) {
+                     CDBG_HIGH("%s: min_frame_idx %d is greater than expected_frame_id %d",
+                         __func__, metadata->good_frame_idx_range.min_frame_idx,
+                         queue->expected_frame_id);
+                 }
+                 queue->expected_frame_id =
+                     metadata->good_frame_idx_range.min_frame_idx;
+                 ch_obj->need3ABracketing = FALSE;
+            }
         }
     }
 end:
