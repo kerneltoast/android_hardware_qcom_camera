@@ -3213,17 +3213,24 @@ int32_t QCameraParameters::setStillMore(const QCameraParameters& params)
 {
     const char *str = params.get(KEY_QC_STILL_MORE);
     const char *prev_str = get(KEY_QC_STILL_MORE);
+    char prop[PROPERTY_VALUE_MAX];
+
+    memset(prop, 0, sizeof(prop));
+    property_get("persist.camera.stillmore.enable", prop, "off");
+    CDBG_HIGH("%s: persist str =%s ",__func__, prop);
     CDBG_HIGH("%s: str =%s & prev_str =%s",__func__, str, prev_str);
+
     if (str != NULL) {
-        if (prev_str == NULL ||
-            strcmp(str, prev_str) != 0) {
+        if (prev_str == NULL || strcmp(str, prev_str) != 0) {
             m_bNeedRestart = true;
             return setStillMore(str);
         }
+    } else if (prev_str == NULL || strcmp(prev_str, prop) != 0 ) {
+        m_bNeedRestart = true;
+        return setStillMore(prop);
     }
     return NO_ERROR;
 }
-
 
 /*===========================================================================
  * FUNCTION   : setRedeyeReduction
@@ -4424,11 +4431,10 @@ int32_t QCameraParameters::initDefaultParameters()
         setSeeMore(VALUE_OFF);
     }
 
-	if(m_pCapability->qcom_supported_feature_mask &
+    if(m_pCapability->qcom_supported_feature_mask &
         CAM_QCOM_FEATURE_STILLMORE) {
         set(KEY_QC_SUPPORTED_STILL_MORE_MODES, onOffValues);
-		setStillMore(VALUE_OFF);
-	}
+    }
 
     //Set Scene Detection
     set(KEY_QC_SUPPORTED_SCENE_DETECT, onOffValues);
@@ -9362,10 +9368,11 @@ bool QCameraParameters::isMobicatEnabled()
 bool QCameraParameters::needThumbnailReprocess(uint32_t *pFeatureMask)
 {
     if (isUbiFocusEnabled() || isChromaFlashEnabled() ||
-        isOptiZoomEnabled()) {
+        isOptiZoomEnabled() || isStillMoreEnabled()) {
         *pFeatureMask &= ~CAM_QCOM_FEATURE_CHROMA_FLASH;
         *pFeatureMask &= ~CAM_QCOM_FEATURE_UBIFOCUS;
         *pFeatureMask &= ~CAM_QCOM_FEATURE_OPTIZOOM;
+        *pFeatureMask &= ~CAM_QCOM_FEATURE_STILLMORE;
         return false;
     } else {
         return true;

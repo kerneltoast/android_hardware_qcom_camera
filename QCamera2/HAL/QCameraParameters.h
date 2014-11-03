@@ -628,7 +628,8 @@ public:
     inline uint32_t UfOutputCount() {
         return m_pCapability->ubifocus_af_bracketing_need.output_count;};
     inline bool generateThumbFromMain() {return isUbiFocusEnabled() ||
-        isChromaFlashEnabled() || isOptiZoomEnabled() || isDifferentFlipZSL(); }
+        isChromaFlashEnabled() || isOptiZoomEnabled() ||
+        isDifferentFlipZSL() || isStillMoreEnabled(); }
     int32_t  updateCurrentFocusPosition(int32_t pos);
     bool isDisplayFrameNeeded() { return m_bDisplayFrame; };
     int32_t setDisplayFrame(bool enabled) {m_bDisplayFrame=enabled; return 0;};
