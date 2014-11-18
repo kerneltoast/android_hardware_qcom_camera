@@ -1034,7 +1034,6 @@ int32_t mm_stream_read_msm_frame(mm_stream_t * my_obj,
             CDBG_HIGH("%s: Stopped poll on stream %p type: %d", __func__,
                 my_obj, my_obj->stream_info->stream_type);
         }
-        pthread_mutex_unlock(&my_obj->buf_lock);
         int8_t idx = vb.index;
         buf_info->buf = &my_obj->buf[idx];
         buf_info->frame_idx = vb.sequence;
