@@ -490,8 +490,7 @@ int32_t QCameraPostProcessor::getJpegEncodingConfig(mm_jpeg_encode_params_t& enc
         thumb_stream->getFrameDimension(src_dim);
         encode_parm.thumb_dim.src_dim = src_dim;
 
-        if ((thumb_stream != main_stream) ||
-                (!m_parent->needRotationReprocess())) {
+        if (!m_parent->needRotationReprocess()) {
             encode_parm.thumb_rotation = m_parent->getJpegRotation();
         }
 
@@ -1682,12 +1681,12 @@ int32_t QCameraPostProcessor::encodeData(qcamera_jpeg_data_t *jpeg_job_data,
             // we use the main stream/frame to encode thumbnail
             thumb_stream = main_stream;
             thumb_frame = main_frame;
-
-            if ((90 == m_parent->getJpegRotation())
-                    || (270 == m_parent->getJpegRotation())) {
-                IMG_SWAP(jpg_job.encode_job.thumb_dim.dst_dim.width,
-                        jpg_job.encode_job.thumb_dim.dst_dim.height);
-            }
+        }
+        if (((90 == m_parent->getJpegRotation())
+                || (270 == m_parent->getJpegRotation()))
+                && (m_parent->needRotationReprocess())) {
+            IMG_SWAP(jpg_job.encode_job.thumb_dim.dst_dim.width,
+                    jpg_job.encode_job.thumb_dim.dst_dim.height);
         }
 
         memset(&src_dim, 0, sizeof(cam_dimension_t));

@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2014 The Linux Foundataion. All rights reserved.
+/* Copyright (c) 2012-2015 The Linux Foundataion. All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions are
@@ -471,8 +471,9 @@ int32_t QCameraStream::calcOffset(cam_stream_info_t *streamInfo)
 
     switch (streamInfo->stream_type) {
     case CAM_STREAM_TYPE_PREVIEW:
-        rc = mm_stream_calc_offset_preview(streamInfo->fmt,
+        rc = mm_stream_calc_offset_preview(streamInfo,
                 &dim,
+                &mPaddingInfo,
                 &streamInfo->buf_planes);
         break;
     case CAM_STREAM_TYPE_POSTVIEW:

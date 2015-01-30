@@ -4898,6 +4898,17 @@ QCameraReprocessChannel *QCamera2HardwareInterface::addReprocChannel(
         minStreamBufNum = 1 + mParameters.getNumOfExtraHDRInBufsIfNeeded();
     }
 
+    cam_dimension_t thumb_src_dim;
+    cam_dimension_t thumb_dst_dim;
+    mParameters.getThumbnailSize(&thumb_dst_dim.width, &thumb_dst_dim.height);
+    mParameters.getStreamDimension(CAM_STREAM_TYPE_POSTVIEW, thumb_src_dim);
+    if ((thumb_dst_dim.width != thumb_src_dim.width) ||
+            (thumb_dst_dim.height != thumb_src_dim.height)) {
+        if (thumb_dst_dim.width != 0 && thumb_dst_dim.height != 0) {
+            pp_config.feature_mask |= CAM_QCOM_FEATURE_CROP;
+        }
+    }
+
     // Add non inplace image lib buffers only when ppproc is present,
     // becuase pproc is non inplace and input buffers for img lib
     // are output for pproc and this number of extra buffers is required
@@ -5886,8 +5897,6 @@ bool QCamera2HardwareInterface::isAFRunning()
 }
 
 /*===========================================================================
-
->>>>>>> c709c9a... Camera: Block CancelAF till HAL receives AF event.
  * FUNCTION   : needReprocess
  *
  * DESCRIPTION: if reprocess is needed
