@@ -1358,7 +1358,7 @@ void QCamera2HardwareInterface::dumpJpegToFile(const void *data,
                 mDumpFrmCnt = 0;
             }
             if (mDumpFrmCnt >= 0 && mDumpFrmCnt <= frm_num) {
-                snprintf(buf, sizeof(buf), "/data/%d_%d.jpg", mDumpFrmCnt, index);
+                snprintf(buf, sizeof(buf), "/data/misc/camera/%d_%d.jpg", mDumpFrmCnt, index);
                 if (true == m_bIntEvtPending) {
                     strncpy(m_BackendFileName, buf, sizeof(buf));
                     mBackendFileSize = size;
@@ -1534,7 +1534,7 @@ void QCamera2HardwareInterface::dumpFrameToFile(QCameraStream *stream,
                     stream->getFrameOffset(offset);
 
                     if (timeinfo != NULL)
-                        strftime (timeBuf, sizeof(timeBuf),"/data/%Y%m%d%H%M%S", timeinfo);
+                        strftime (timeBuf, sizeof(timeBuf),"/data/misc/camera/%Y%m%d%H%M%S", timeinfo);
                     String8 filePath(timeBuf);
                     switch (dump_type) {
                     case QCAMERA_DUMP_FRM_PREVIEW:

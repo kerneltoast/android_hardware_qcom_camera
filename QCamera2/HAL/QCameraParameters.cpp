@@ -6827,8 +6827,6 @@ int32_t QCameraParameters::updateFlash(bool commitSettings)
     }
 
     if (value != mFlashDaemonValue) {
-
-        ALOGV("%s: Setting Flash value %d", __func__, value);
         rc = AddSetParmEntryToBatch(m_pParamBuf,
                                       CAM_INTF_PARM_LED_MODE,
                                       sizeof(value),
