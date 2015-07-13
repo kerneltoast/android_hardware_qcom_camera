@@ -3463,7 +3463,7 @@ cam_pad_format_t QCameraHardwareInterface::getPreviewPadding() const
 
 int QCameraHardwareInterface::getJpegQuality() const
 {
-    return mJpegQuality;
+    return 100;
 }
 
 int QCameraHardwareInterface::getNumOfSnapshots(void) const
