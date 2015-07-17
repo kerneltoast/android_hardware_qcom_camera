@@ -3020,6 +3020,7 @@ TestContext::TestContext()
     mPiPinUse = false;
     mViVinUse = false;
     mIsZSLOn = false;
+    mCurrentCameraIndex = 0;
     memset(&mViVBuff, 0, sizeof(ViVBuff_t));
 
     ProcessState::self()->startThreadPool();
