@@ -95,7 +95,7 @@ LOCAL_MODULE_TAGS := optional
 
 LOCAL_MODULE:= mm-qcamera-app
 LOCAL_32_BIT_ONLY := true
-include $(BUILD_EXECUTABLE)
+#include $(BUILD_EXECUTABLE)
 endif
 
 ifeq ($(call is-vendor-board-platform,QCOM),true)

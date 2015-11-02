@@ -49,6 +49,6 @@ LOCAL_MODULE_TAGS:= tests
 
 LOCAL_CFLAGS += -Wall -fno-short-enums -O0
 
-include $(BUILD_EXECUTABLE)
+#include $(BUILD_EXECUTABLE)
 
 
