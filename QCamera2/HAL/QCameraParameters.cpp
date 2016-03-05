@@ -610,6 +610,8 @@ const QCameraParameters::QCameraMap QCameraParameters::CDS_MODES_MAP[] = {
 #define TOTAL_RAM_SIZE_512MB 536870912
 
 static uint32_t mPrvwExpTimeUs = 0;
+static bool mIsManualIso = false;
+static bool mIsManualExpTime = false;
 
 /*===========================================================================
  * FUNCTION   : QCameraParameters
@@ -2610,7 +2612,8 @@ int32_t  QCameraParameters::setExposureTime(const QCameraParameters& params)
     const char *prev_str = get(KEY_QC_EXPOSURE_TIME);
     if (str != NULL) {
         if (prev_str == NULL ||
-            strcmp(str, prev_str) != 0) {
+            strcmp(str, prev_str) != 0 ||
+            (strcmp(str, "0") && mPrvwExpTimeUs)) {
             return setExposureTime(str);
         }
     }
@@ -3850,6 +3853,17 @@ int QCameraParameters::getPrvwExpTime()
     return mPrvwExpTimeUs;
 }
 
+bool QCameraParameters::isManualMode()
+{
+    bool manualMode;
+
+    manualMode = mIsManualIso || mIsManualExpTime;
+    if (manualMode)
+        mPrvwExpTimeUs = 0;
+
+    return manualMode;
+}
+
 /*===========================================================================
  * FUNCTION   : updateParameters
  *
@@ -4332,8 +4346,8 @@ int32_t QCameraParameters::initDefaultParameters()
     setISOValue(ISO_AUTO);
 
     // Set exposure time, we should get them from m_pCapability
-    m_pCapability->min_exposure_time = 200;
-    m_pCapability->max_exposure_time = 2000000;
+    m_pCapability->min_exposure_time = 100;
+    m_pCapability->max_exposure_time = 16000000;
     set(KEY_QC_MIN_EXPOSURE_TIME, m_pCapability->min_exposure_time);
     set(KEY_QC_MAX_EXPOSURE_TIME, m_pCapability->max_exposure_time);
     //setExposureTime("0");
@@ -5376,7 +5390,6 @@ int32_t QCameraParameters::setZoom(int zoom_level)
  *==========================================================================*/
 int32_t  QCameraParameters::setISOValue(const char *isoValue)
 {
-#if 0
     char iso[PROPERTY_VALUE_MAX];
     int32_t continous_iso = 0;
     // Check if continuous ISO is set
@@ -5393,6 +5406,14 @@ int32_t  QCameraParameters::setISOValue(const char *isoValue)
         int32_t value = lookupAttr(ISO_MODES_MAP,
                                    sizeof(ISO_MODES_MAP)/sizeof(QCameraMap),
                                    isoValue);
+
+        if (value != CAM_ISO_MODE_AUTO) {
+            mIsManualIso = true;
+            setPrvwExpTime(0);
+        } else {
+            mIsManualIso = false;
+        }
+
         if (value != NAME_NOT_FOUND) {
             CDBG("%s: Setting ISO value %s", __func__, isoValue);
             updateParamEntry(KEY_QC_ISO_MODE, isoValue);
@@ -5405,8 +5426,6 @@ int32_t  QCameraParameters::setISOValue(const char *isoValue)
     ALOGE("Invalid ISO value: %s",
           (isoValue == NULL) ? "NULL" : isoValue);
     return BAD_VALUE;
-#endif
-    return NO_ERROR;
 }
 
 /*===========================================================================
@@ -5423,7 +5442,6 @@ int32_t  QCameraParameters::setISOValue(const char *isoValue)
  *==========================================================================*/
 int32_t  QCameraParameters::setExposureTime(const char *expTimeStr)
 {
-#if 0
     if (expTimeStr != NULL) {
         int32_t expTimeUs = atoi(expTimeStr);
         int32_t min_exp_time = m_pCapability->min_exposure_time; /* 200 */
@@ -5432,10 +5450,14 @@ int32_t  QCameraParameters::setExposureTime(const char *expTimeStr)
         // Cap exposure time to upper/lower limits without returning an error
         // to prevent crashes in CameraNext
         if (expTimeUs) {
+            mIsManualExpTime = true; 
+            setPrvwExpTime(0);
             if (expTimeUs > max_exp_time)
                 expTimeUs = max_exp_time;
             else if (expTimeUs < min_exp_time)
                 expTimeUs = min_exp_time;
+        } else {
+            mIsManualExpTime = false;
         }
 
         // expTime == 0 means not to use manual exposure time.
@@ -5453,8 +5475,6 @@ int32_t  QCameraParameters::setExposureTime(const char *expTimeStr)
     ALOGE("Invalid exposure time, value: %s",
           (expTimeStr == NULL) ? "NULL" : expTimeStr);
     return BAD_VALUE;
-#endif
-    return NO_ERROR;
 }
 
 /*===========================================================================
