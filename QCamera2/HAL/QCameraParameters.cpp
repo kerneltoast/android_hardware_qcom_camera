@@ -3865,13 +3865,7 @@ int QCameraParameters::getPrvwExpTime()
 
 bool QCameraParameters::isManualMode()
 {
-    bool manualMode;
-
-    manualMode = mIsManualIso || mIsManualExpTime;
-    if (manualMode)
-        mPrvwExpTimeUs = 0;
-
-    return manualMode;
+    return mIsManualIso || mIsManualExpTime;
 }
 
 uint32_t QCameraParameters::getCameraId()
@@ -5428,7 +5422,6 @@ int32_t  QCameraParameters::setISOValue(const char *isoValue)
 
         if (value != CAM_ISO_MODE_AUTO) {
             mIsManualIso = true;
-            setPrvwExpTime(0);
         } else {
             mIsManualIso = false;
         }
@@ -5469,8 +5462,7 @@ int32_t  QCameraParameters::setExposureTime(const char *expTimeStr)
         // Cap exposure time to upper/lower limits without returning an error
         // to prevent crashes in CameraNext
         if (expTimeUs) {
-            mIsManualExpTime = true; 
-            setPrvwExpTime(0);
+            mIsManualExpTime = true;
             if (expTimeUs > max_exp_time)
                 expTimeUs = max_exp_time;
             else if (expTimeUs < min_exp_time)
