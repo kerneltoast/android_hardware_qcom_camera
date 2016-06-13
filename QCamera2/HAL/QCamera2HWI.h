@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2014, The Linux Foundataion. All rights reserved.
+/* Copyright (c) 2012-2014,2016 The Linux Foundataion. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -604,6 +604,7 @@ private:
     uint64_t mCurrFrameCnt;
     nsecs_t mLastAFScanTime;
     nsecs_t mLastCaptureTime;
+    QCameraVideoMemory *mVideoMem;
 };
 
 }; // namespace qcamera
