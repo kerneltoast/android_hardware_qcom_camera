@@ -606,7 +606,6 @@ private:
     uint64_t mCurrFrameCnt;
     nsecs_t mLastAFScanTime;
     nsecs_t mLastCaptureTime;
-    QCameraVideoMemory *mVideoMem;
 };
 
 }; // namespace qcamera
