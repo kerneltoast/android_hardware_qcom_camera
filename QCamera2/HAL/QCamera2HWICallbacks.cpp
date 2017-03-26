@@ -1142,9 +1142,23 @@ void QCamera2HardwareInterface::metadata_stream_cb_routine(mm_camera_super_buf_t
                 free(payload);
                 payload = NULL;
 
+            } else if (pMetaData->focus_data.focus_state == CAM_AF_SCANNING) {
+                pme->mLastAFScanTime = systemTime();
             }
         } else {
             ALOGE("%s: No memory for focus qcamera_sm_internal_evt_payload_t", __func__);
+        }
+    } else if (pme->m_currentFocusState == CAM_AF_SCANNING) {
+        /* Recover if passive AF has stalled after photo capture */
+        if (pme->mLastAFScanTime && pme->mLastCaptureTime) {
+            nsecs_t now = systemTime();
+            nsecs_t scanDelta = now - pme->mLastAFScanTime;
+            nsecs_t captureDelta = now - pme->mLastCaptureTime;
+            if (captureDelta < ms2ns(1000) && scanDelta > ms2ns(200)) {
+                /* Notify userspace that passive AF has stopped */
+                pme->sendEvtNotify(CAMERA_MSG_FOCUS_MOVE, false, 0);
+                pme->mLastAFScanTime = 0;
+            }
         }
     }
 
