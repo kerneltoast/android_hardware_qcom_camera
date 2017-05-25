@@ -994,7 +994,7 @@ camera_memory_t *QCameraStreamMemory::getMemory(int index, bool metadata) const
 * RETURN     : camera native handle ptr
 *              NULL if not supported or failed
 *==========================================================================*/
-native_handle_t *QCameraVideoMemory::getNativeHandle(uint32_t index, bool metadata)
+native_handle_t *QCameraVideoMemory::getNativeHandle(int index, bool metadata)
 {
     if (index >= mMetaBufCount || (!metadata && index >= mBufferCount)) {
         return NULL;
@@ -1354,7 +1354,7 @@ camera_memory_t *QCameraVideoMemory::getMemory(int index, bool metadata) const
         if (i < mMetaBufCount) {
             return mMetadata[i];
         } else {
-            CDBG_HIGH("No free video meta memory");
+            ALOGE("No free video meta memory");
             return NULL;
         }
 #else

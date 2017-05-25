@@ -848,18 +848,18 @@ int32_t QCameraStream::bufDone(const void *opaque, bool isMetaData)
                 ALOGE("%s: Cannot find buf for opaque data = %p", __func__, opaque);
                 return BAD_INDEX;
             }
-            CDBG("%s: Buffer Index = %d, Frame Idx = %d", __func__, index,
+            ALOGD("%s: Buffer Index = %d, Frame Idx = %d", __func__, index,
                     mBufDefs[index].frame_idx);
         }
     //Close and delete duplicated native handle and FD's.
     if (lVideoMem != NULL) {
         rc = lVideoMem->closeNativeHandle(opaque, isMetaData);
         if (rc != NO_ERROR) {
-            CDBG_HIGH("Invalid video metadata");
+            ALOGE("Invalid video metadata");
             return rc;
         }
     } else {
-        CDBG_HIGH("Possible FD leak. Release recording called after stop");
+        ALOGE("Possible FD leak. Release recording called after stop");
     }
     rc = bufDone(index);
     return rc;
