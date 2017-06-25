@@ -606,6 +606,7 @@ private:
     uint64_t mCurrFrameCnt;
     nsecs_t mLastAFScanTime;
     nsecs_t mLastCaptureTime;
+    bool mIsTorchInit;
 };
 
 }; // namespace qcamera
