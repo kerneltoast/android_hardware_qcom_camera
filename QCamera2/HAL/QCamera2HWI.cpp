@@ -39,71 +39,6 @@
 #include "QCamera2HWI.h"
 #include "QCameraMem.h"
 
-// This is a working set of camera parameters for the rear camera needed in order to
-// statically initialize the flashlight class in the framework. This is necessary
-// because our camera has issues opening during early init, leaving the flashlight
-// class unable to pull a live copy of the camera parameters (and thus leaving
-// the built-in system flashlight broken).
-static const char *static_flattened_params =
-    "ae-bracket-hdr=Off;ae-bracket-hdr-values=Off,AE-Bracket;antibanding=auto;antiban"
-    "ding-values=off,60hz,50hz,auto;auto-exposure=frame-average;auto-exposure-lock=fa"
-    "lse;auto-exposure-lock-supported=true;auto-exposure-values=frame-average,center-"
-    "weighted,spot-metering,center-weighted,spot-metering-adv,center-weighted-adv;aut"
-    "o-whitebalance-lock=false;auto-whitebalance-lock-supported=true;avtimer=disable;"
-    "brightness-step=1;camera-mode=0;contrast=5;contrast-step=1;denoise=denoise-on;de"
-    "noise-values=denoise-off,denoise-on;effect=none;effect-values=none,mono,negative"
-    ",solarize,sepia,posterize,whiteboard,blackboard,aqua,emboss,sketch,neon;exposure"
-    "-compensation=0;exposure-compensation-step=0.166667;face-detection=off;face-dete"
-    "ction-values=off,on;flash-mode=off;flash-mode-values=off,auto,on,torch;flip-mode"
-    "-values=off,flip-v,flip-h,flip-vh;focal-length=3.79;focus-areas=(0, 0, 0, 0, 0);"
-    "focus-distances=Infinity,Infinity,Infinity;focus-mode=auto;focus-mode-values=aut"
-    "o,infinity,macro,continuous-video,continuous-picture,manual;hdr-need-1x=false;hf"
-    "r-size-values=2104x1184,1280x720,1280x720;histogram=disable;histogram-values=ena"
-    "ble,disable;horizontal-view-angle=63.1;iso=auto;iso-values=auto,ISO100,ISO200,IS"
-    "O400,ISO800,ISO1600,ISO3200;jpeg-quality=95;jpeg-thumbnail-height=288;jpeg-thumb"
-    "nail-quality=85;jpeg-thumbnail-size-values=512x288,480x288,256x154,432x288,320x2"
-    "40,176x144,0x0;jpeg-thumbnail-width=512;lensshade=enable;lensshade-values=enable"
-    ",disable;luma-adaptation=3;max-brightness=6;max-contrast=10;max-exposure-compens"
-    "ation=12;max-exposure-time=2000000;max-focus-pos-index=1023;max-num-detected-fac"
-    "es-hw=5;max-num-detected-faces-sw=5;max-num-focus-areas=1;max-num-metering-areas"
-    "=5;max-saturation=10;max-sce-factor=100;max-sharpness=36;max-wb-cct=8000;max-zoo"
-    "m=60;mce=enable;mce-values=enable,disable;metering-areas=(0, 0, 0, 0, 0);min-bri"
-    "ghtness=0;min-contrast=0;min-exposure-compensation=-12;min-exposure-time=200;min"
-    "-focus-pos-dac=1023;min-focus-pos-index=0;min-saturation=0;min-sce-factor=-100;m"
-    "in-sharpness=0;min-wb-cct=2000;num-snaps-per-shutter=1;picture-format=jpeg;pictu"
-    "re-format-values=jpeg,bayer-mipi-10rggb,bayer-ideal-qcom-10rggb,bayer-qcom-10rgg"
-    "b,yuv422sp;picture-size=320x240;picture-size-values=4208x3120,4160x3120,4160x234"
-    "0,4000x3000,4096x2160,3200x2400,3200x1800,2592x1944,2048x1536,1920x1080,1600x120"
-    "0,1280x768,1280x720,1024x768,800x600,800x480,720x480,640x480,320x240;preferred-p"
-    "review-size-for-video=1920x1080;preview-flip=off;preview-format=yuv420sp;preview"
-    "-format-values=yuv420sp,yuv420p,nv12-venus;preview-fps-range=7500,30000;preview-"
-    "fps-range-values=(7500,30000);preview-frame-rate=30;preview-frame-rate-values=8,"
-    "9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30;preview-size=19"
-    "20x1080;preview-size-values=4096x2160,3840x2160,2560x1440,1920x1080,1440x1080,12"
-    "80x720,720x480,640x480,320x240;qc-camera-features=34175;qc-max-num-requested-fac"
-    "es=5;raw-size=4208x3120;redeye-reduction=disable;redeye-reduction-values=enable,"
-    "disable;saturation=5;saturation-step=1;sce-factor-step=10;scene-detect=off;scene"
-    "-detect-values=off,on;scene-mode=auto;scene-mode-values=auto,asd,landscape,snow,"
-    "beach,sunset,night,portrait,backlight,sports,steadyphoto,flowers,candlelight,fir"
-    "eworks,party,night-portrait,theatre,action,AR,hdr;selectable-zone-af=auto;select"
-    "able-zone-af-values=auto,spot-metering,center-weighted,frame-average;sharpness=1"
-    "2;sharpness-step=6;skinToneEnhancement=0;skinToneEnhancement-values=enable,disab"
-    "le;smooth-zoom-supported=false;snapshot-hdr=off;snapshot-hdr-values=off,on;snaps"
-    "hot-picture-flip=off;supported-live-snapshot-sizes=4096x2160,3840x2160,2560x1440"
-    ",1920x1080,1280x720,800x480,720x480,640x480,320x240;touch-af-aec=touch-off;touch"
-    "-af-aec-values=touch-off,touch-on;vertical-view-angle=49.1;video-flip=off;video-"
-    "frame-format=yuv420sp;video-hdr=off;video-hdr-values=off,on;video-hfr=off;video-"
-    "hfr-values=60,120,90,off;video-hsr=off;video-size=1920x1080;video-size-values=40"
-    "96x2160,3840x2160,2560x1440,1920x1080,1280x720,800x480,720x480,640x480,320x240;v"
-    "ideo-snapshot-supported=true;video-stabilization-supported=false;whitebalance=au"
-    "to;whitebalance-values=auto,incandescent,fluorescent,warm-fluorescent,daylight,c"
-    "loudy-daylight,twilight,shade,manual-cct;zoom=0;zoom-ratios=100,102,104,107,109,"
-    "112,114,117,120,123,125,128,131,135,138,141,144,148,151,155,158,162,166,170,174,"
-    "178,182,186,190,195,200,204,209,214,219,224,229,235,240,246,251,257,263,270,276,"
-    "282,289,296,303,310,317,324,332,340,348,356,364,373,381,390,400;zoom-supported=t"
-    "rue;zsl=on;zsl-values=off,on"
-    ;
-
 #define MAP_TO_DRIVER_COORDINATE(val, base, scale, offset) (val * scale / base + offset)
 #define CAMERA_MIN_STREAMING_BUFFERS     3
 #define EXTRA_ZSL_PREVIEW_STREAM_BUF     3
@@ -189,10 +124,6 @@ int QCamera2HardwareInterface::set_preview_window(struct camera_device *device,
         return BAD_VALUE;
     }
 
-    if (hw->mIsTorchInit) {
-        return NO_ERROR;
-    }
-
     hw->lockAPI();
     qcamera_api_result_t apiResult;
     rc = hw->processAPI(QCAMERA_SM_EVT_SET_PREVIEW_WINDOW, (void *)window);
@@ -269,11 +200,6 @@ void QCamera2HardwareInterface::enable_msg_type(struct camera_device *device, in
         ALOGE("NULL camera device");
         return;
     }
-
-    if (hw->mIsTorchInit) {
-        return;
-    }
-
     hw->lockAPI();
     qcamera_api_result_t apiResult;
     int32_t rc = hw->processAPI(QCAMERA_SM_EVT_ENABLE_MSG_TYPE, (void *)msg_type);
@@ -302,11 +228,6 @@ void QCamera2HardwareInterface::disable_msg_type(struct camera_device *device, i
         ALOGE("NULL camera device");
         return;
     }
-
-    if (hw->mIsTorchInit) {
-        return;
-    }
-
     hw->lockAPI();
     qcamera_api_result_t apiResult;
     int32_t rc = hw->processAPI(QCAMERA_SM_EVT_DISABLE_MSG_TYPE, (void *)msg_type);
@@ -337,11 +258,6 @@ int QCamera2HardwareInterface::msg_type_enabled(struct camera_device *device, in
         ALOGE("NULL camera device");
         return BAD_VALUE;
     }
-
-    if (hw->mIsTorchInit) {
-        return 0;
-    }
-
     hw->lockAPI();
     qcamera_api_result_t apiResult;
     ret = hw->processAPI(QCAMERA_SM_EVT_MSG_TYPE_ENABLED, (void *)msg_type);
@@ -375,11 +291,6 @@ int QCamera2HardwareInterface::start_preview(struct camera_device *device)
         ALOGE("NULL camera device");
         return BAD_VALUE;
     }
-
-    if (hw->mIsTorchInit) {
-        return NO_ERROR;
-    }
-
     ALOGE("[KPI Perf] %s: E PROFILE_START_PREVIEW", __func__);
     hw->lockAPI();
     qcamera_api_result_t apiResult;
@@ -416,11 +327,6 @@ void QCamera2HardwareInterface::stop_preview(struct camera_device *device)
         ALOGE("NULL camera device");
         return;
     }
-
-    if (hw->mIsTorchInit) {
-        return;
-    }
-
     ALOGE("[KPI Perf] %s: E PROFILE_STOP_PREVIEW", __func__);
     hw->lockAPI();
     qcamera_api_result_t apiResult;
@@ -451,10 +357,6 @@ int QCamera2HardwareInterface::preview_enabled(struct camera_device *device)
     if (!hw) {
         ALOGE("NULL camera device");
         return BAD_VALUE;
-    }
-
-    if (hw->mIsTorchInit) {
-        return 0;
     }
 
     hw->lockAPI();
@@ -493,10 +395,6 @@ int QCamera2HardwareInterface::store_meta_data_in_buffers(
         return BAD_VALUE;
     }
 
-    if (hw->mIsTorchInit) {
-        return NO_ERROR;
-    }
-
     hw->lockAPI();
     qcamera_api_result_t apiResult;
     ret = hw->processAPI(QCAMERA_SM_EVT_STORE_METADATA_IN_BUFS, (void *)enable);
@@ -531,11 +429,6 @@ int QCamera2HardwareInterface::start_recording(struct camera_device *device)
         ALOGE("NULL camera device");
         return BAD_VALUE;
     }
-
-    if (hw->mIsTorchInit) {
-        return NO_ERROR;
-    }
-
     // Preview window changes for 720p and higher
     hw->mParameters.getVideoSize(&width, &height);
     if ((width * height) >= (1280 * 720)) {
@@ -598,11 +491,6 @@ void QCamera2HardwareInterface::stop_recording(struct camera_device *device)
         ALOGE("NULL camera device");
         return;
     }
-
-    if (hw->mIsTorchInit) {
-        return;
-    }
-
     ALOGE("[KPI Perf] %s: E PROFILE_STOP_RECORDING", __func__);
     hw->lockAPI();
     qcamera_api_result_t apiResult;
@@ -634,11 +522,6 @@ int QCamera2HardwareInterface::recording_enabled(struct camera_device *device)
         ALOGE("NULL camera device");
         return BAD_VALUE;
     }
-
-    if (hw->mIsTorchInit) {
-        return 0;
-    }
-
     hw->lockAPI();
     qcamera_api_result_t apiResult;
     ret = hw->processAPI(QCAMERA_SM_EVT_RECORDING_ENABLED, NULL);
@@ -672,11 +555,6 @@ void QCamera2HardwareInterface::release_recording_frame(
         ALOGE("NULL camera device");
         return;
     }
-
-    if (hw->mIsTorchInit) {
-        return;
-    }
-
     ALOGD("%s: E", __func__);
 
     hw->lockAPI();
@@ -710,11 +588,6 @@ int QCamera2HardwareInterface::auto_focus(struct camera_device *device)
         ALOGE("NULL camera device");
         return BAD_VALUE;
     }
-
-    if (hw->mIsTorchInit) {
-        return NO_ERROR;
-    }
-
     ALOGE("[KPI Perf] %s : E PROFILE_AUTO_FOCUS", __func__);
     hw->lockAPI();
     qcamera_api_result_t apiResult;
@@ -750,11 +623,6 @@ int QCamera2HardwareInterface::cancel_auto_focus(struct camera_device *device)
         ALOGE("NULL camera device");
         return BAD_VALUE;
     }
-
-    if (hw->mIsTorchInit) {
-        return NO_ERROR;
-    }
-
     hw->lockAPI();
     qcamera_api_result_t apiResult;
     ret = hw->processAPI(QCAMERA_SM_EVT_STOP_AUTO_FOCUS, NULL);
@@ -788,11 +656,6 @@ int QCamera2HardwareInterface::take_picture(struct camera_device *device)
         ALOGE("NULL camera device");
         return BAD_VALUE;
     }
-
-    if (hw->mIsTorchInit) {
-        return NO_ERROR;
-    }
-
     ALOGE("[KPI Perf] %s: E PROFILE_TAKE_PICTURE", __func__);
     hw->lockAPI();
     qcamera_api_result_t apiResult;
@@ -845,11 +708,6 @@ int QCamera2HardwareInterface::cancel_picture(struct camera_device *device)
         ALOGE("NULL camera device");
         return BAD_VALUE;
     }
-
-    if (hw->mIsTorchInit) {
-        return NO_ERROR;
-    }
-
     hw->lockAPI();
     qcamera_api_result_t apiResult;
     ret = hw->processAPI(QCAMERA_SM_EVT_CANCEL_PICTURE, NULL);
@@ -885,11 +743,6 @@ int QCamera2HardwareInterface::set_parameters(struct camera_device *device,
         ALOGE("NULL camera device");
         return BAD_VALUE;
     }
-
-    if (hw->mIsTorchInit) {
-        return NO_ERROR;
-    }
-
     hw->lockAPI();
     qcamera_api_result_t apiResult;
     ret = hw->processAPI(QCAMERA_SM_EVT_SET_PARAMS, (void *)parms);
@@ -921,11 +774,6 @@ char* QCamera2HardwareInterface::get_parameters(struct camera_device *device)
         ALOGE("NULL camera device");
         return NULL;
     }
-
-    if (hw->mIsTorchInit) {
-        return strdup(static_flattened_params);
-    }
-
     hw->lockAPI();
     qcamera_api_result_t apiResult;
     int32_t rc = hw->processAPI(QCAMERA_SM_EVT_GET_PARAMS, NULL);
@@ -974,12 +822,6 @@ void QCamera2HardwareInterface::put_parameters(struct camera_device *device,
         ALOGE("NULL camera device");
         return;
     }
-
-    if (hw->mIsTorchInit) {
-        hw->putParameters(parm);
-        return;
-    }
-
     hw->lockAPI();
     qcamera_api_result_t apiResult;
     int32_t ret = hw->processAPI(QCAMERA_SM_EVT_PUT_PARAMS, (void *)parm);
@@ -1017,10 +859,6 @@ int QCamera2HardwareInterface::send_command(struct camera_device *device,
         return BAD_VALUE;
     }
 
-    if (hw->mIsTorchInit) {
-        return NO_ERROR;
-    }
-
     qcamera_sm_evt_command_payload_t payload;
     memset(&payload, 0, sizeof(qcamera_sm_evt_command_payload_t));
     payload.cmd = cmd;
@@ -1056,11 +894,6 @@ void QCamera2HardwareInterface::release(struct camera_device *device)
         ALOGE("NULL camera device");
         return;
     }
-
-    if (hw->mIsTorchInit) {
-        return;
-    }
-
     hw->lockAPI();
     qcamera_api_result_t apiResult;
     int32_t ret = hw->processAPI(QCAMERA_SM_EVT_RELEASE, NULL);
@@ -1092,11 +925,6 @@ int QCamera2HardwareInterface::dump(struct camera_device *device, int fd)
         ALOGE("NULL camera device");
         return BAD_VALUE;
     }
-
-    if (hw->mIsTorchInit) {
-        return NO_ERROR;
-    }
-
     hw->lockAPI();
     qcamera_api_result_t apiResult;
     ret = hw->processAPI(QCAMERA_SM_EVT_DUMP, (void *)fd);
@@ -1162,11 +990,6 @@ int QCamera2HardwareInterface::register_face_image(struct camera_device *device,
         ALOGE("NULL camera device");
         return BAD_VALUE;
     }
-
-    if (hw->mIsTorchInit) {
-        return NO_ERROR;
-    }
-
     qcamera_sm_evt_reg_face_payload_t payload;
     memset(&payload, 0, sizeof(qcamera_sm_evt_reg_face_payload_t));
     payload.img_ptr = img_ptr;
@@ -1229,8 +1052,7 @@ QCamera2HardwareInterface::QCamera2HardwareInterface(int cameraId)
       mPreviewFrameSkipValid(0),
       mCurrFrameCnt(0),
       mLastAFScanTime(0),
-      mLastCaptureTime(0),
-      mIsTorchInit(false)
+      mLastCaptureTime(0)
 {
     mCameraDevice.common.tag = HARDWARE_DEVICE_TAG;
     mCameraDevice.common.version = HARDWARE_DEVICE_API_VERSION(1, 0);
@@ -1345,14 +1167,6 @@ int QCamera2HardwareInterface::openCamera()
         ALOGE("Failure: Camera already opened");
         return ALREADY_EXISTS;
     }
-
-    // Send a static set of parameters for the rear camera's flashlight probe
-    property_get("sys.boot_completed", value, "");
-    if (strcmp(value, "1") && mCameraId == 0) {
-        mIsTorchInit = true;
-        return NO_ERROR;
-    }
-
     mCameraHandle = camera_open(mCameraId);
     if (!mCameraHandle) {
         ALOGE("camera_open failed.");
