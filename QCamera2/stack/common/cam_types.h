@@ -39,14 +39,6 @@
 
 #define MAX_REAL_SHARPNESS 7 // Cap backend sharpness value to 7 (out of 36)
 
-#define ISO_VAL_AUTO 0
-#define ISO_VAL_100 100
-#define ISO_VAL_200 200
-#define ISO_VAL_400 400
-#define ISO_VAL_800 800
-#define ISO_VAL_1600 1600
-#define ISO_VAL_3200 3200
-
 #define CAM_MAX_NUM_BUFS_PER_STREAM 24
 #define MAX_METADATA_PAYLOAD_SIZE 1024
 

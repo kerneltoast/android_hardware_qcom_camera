@@ -426,10 +426,6 @@ private:
     bool processUFDumps(qcamera_jpeg_evt_payload_t *evt);
     void captureDone();
 
-    void processAntishakeAlgo(QCamera2HardwareInterface *pme,
-                            float curr_exp_time,
-                            int32_t curr_iso_value);
-
     static void copyList(cam_dimension_t* src_list,
                    cam_dimension_t* dst_list, uint8_t len);
     static void camEvtHandle(uint32_t camera_handle,
@@ -603,7 +599,6 @@ private:
     int32_t mOutputCount;
     bool mPreviewFrameSkipValid;
     cam_frame_idx_range_t mPreviewFrameSkipIdxRange;
-    uint64_t mCurrFrameCnt;
     nsecs_t mLastAFScanTime;
     nsecs_t mLastCaptureTime;
 };
