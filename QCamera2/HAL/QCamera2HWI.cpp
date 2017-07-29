@@ -47,8 +47,6 @@
 
 #define HDR_CONFIDENCE_THRESHOLD 0.4
 
-#define ARRAY_SIZE(a) (sizeof(a)/sizeof((a)[0]))
-
 namespace qcamera {
 
 cam_capability_t *gCamCapability[MM_CAMERA_MAX_NUM_SENSORS];

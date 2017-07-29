@@ -40,6 +40,8 @@
 #define CAM_MAX_NUM_BUFS_PER_STREAM 24
 #define MAX_METADATA_PAYLOAD_SIZE 1024
 
+#define ARRAY_SIZE(a) (sizeof(a)/sizeof((a)[0]))
+
 #define CEILING64(X) (((X) + 0x0003F) & 0xFFFFFFC0)
 #define CEILING32(X) (((X) + 0x0001F) & 0xFFFFFFE0)
 #define CEILING16(X) (((X) + 0x000F) & 0xFFF0)
